@@ -24,14 +24,15 @@ Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleSta
     const double minRange = std::min(range, other.range);
 
     Vector2D distVec = otherState.pos - myState.pos;
-    if(distVec.magnitude() < 1e-6) return Vector2D(0, 0);
-    Vector2D direction = distVec.norm();
     double dist = distVec.magnitude();
+    double forceFactor = computeForceFactor(totalRadius, minRange, dist);
+    Vector2D direction = distVec.norm();
+    if(forceFactor == 0 || distVec.magnitude() < 1e-6) return Vector2D(0, 0);
 
     double exclusionForce = totalExclusionFactor * dist * exp(-(dist * dist));
     double dipoleForce = totalDipoleFactor * dist * dist / (1. + dist * dist * dist * dist * dist * dist);
     double totalForce = exclusionForce + dipoleForce;
-    double cutoffForce = totalForce * computeForceFactor(totalRadius, minRange, dist);
+    double cutoffForce = totalForce * forceFactor;
 
     return direction * cutoffForce;
 }
