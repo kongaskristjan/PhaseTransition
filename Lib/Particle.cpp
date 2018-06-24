@@ -31,7 +31,9 @@ Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleSta
     double dist = distVec.magnitude();
     double forceFactor = computeForceFactor(totalRadius, minRange, dist);
     Vector2D direction = distVec.norm();
-    if(forceFactor == 0 || distVec.magnitude() < 1e-6) return Vector2D(0, 0);
+    if(forceFactor == 0 || distVec.magnitude() < 1e-6) {
+        return Vector2D(0, 0);
+    }
 
     double exclusionForce = totalExclusionFactor * dist * exp(-(dist * dist));
     double dipoleForce = totalDipoleFactor * dist * dist / (1. + dist * dist * dist * dist * dist * dist);
@@ -41,12 +43,8 @@ Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleSta
     return direction * cutoffForce;
 }
 
-double ParticleType::forceRange() const {
-    return range;
-}
-
 double ParticleType::computeForceFactor(double totalRadius, double minRange, double dist) const {
-    return (minRange - dist) / totalRadius;
+    return superSmoothZeroToOne((minRange - dist) / totalRadius);
 }
 
 // Super smooth function with f(x <= 0) == 0, f(x >= 1) == 1

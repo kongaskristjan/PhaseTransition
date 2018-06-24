@@ -19,7 +19,7 @@ public:
     ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range);
     ParticleState derivative(const ParticleState &state, const Vector2D &force) const;
     Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
-    double forceRange() const;
+    inline double forceRange() const { return range; }
 
 private:
     double computeForceFactor(double totalRadius, double minRange, double dist) const;

@@ -30,13 +30,11 @@ TEST(ParticleTest, ForceSmoothness) {
     for(double x = -range - 1; x < range + 1; x += diff) {
         ParticleState state(Vector2D(x, 0));
         forces.push_back(type.computeForce(type, state, state0).x);
-        std::cerr << x << " " << forces.back() << std::endl;
     }
 
     for(size_t i = 1; i < forces.size() - 1; i += ++i) {
         ASSERT_NEAR((forces[i - 1] + forces[i + 1]) / 2, forces[i], 10 * diff * diff);
     }
-    std::cerr << forces.size() << std::endl;
 }
 
 TEST(ParticleTest, ForceRange) {
