@@ -17,6 +17,10 @@ ParticleType::ParticleType(double _mass, double _radius, double _exclusionConsta
     range = _range;
 }
 
+ParticleState ParticleType::derivative(const ParticleState &state, const Vector2D &force) const {
+    return ParticleState(state.v, force / mass);
+}
+
 Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const {
     const double totalRadius = radius + other.radius;
     const double totalExclusionFactor = exclusionConstant * other.exclusionConstant;
@@ -37,6 +41,10 @@ Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleSta
     return direction * cutoffForce;
 }
 
+double ParticleType::forceRange() const {
+    return range;
+}
+
 double ParticleType::computeForceFactor(double totalRadius, double minRange, double dist) const {
     return (minRange - dist) / totalRadius;
 }
@@ -51,12 +59,4 @@ double ParticleType::superSmoothZeroToOne(double x) const {
     double factor1 = exp(1 / (x - 1));
     double weightedSum = factor1 / (factor0 + factor1);
     return weightedSum;
-}
-
-double ParticleType::forceRange() const {
-    return range;
-}
-
-ParticleState ParticleType::derivative(const ParticleState &state, const Vector2D &force) const {
-    return ParticleState(state.v, force / mass);
 }

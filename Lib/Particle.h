@@ -17,13 +17,14 @@ ParticleState operator*(const ParticleState & lhs, double rhs);
 class ParticleType {
 public:
     ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range);
-    Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
-    double computeForceFactor(double totalRadius, double minRange, double dist) const;
-    double superSmoothZeroToOne(double x) const;
-    double forceRange() const;
     ParticleState derivative(const ParticleState &state, const Vector2D &force) const;
+    Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
+    double forceRange() const;
 
 private:
+    double computeForceFactor(double totalRadius, double minRange, double dist) const;
+    double superSmoothZeroToOne(double x) const;
+
     double mass, radius, exclusionConstant, dipoleMoment, range;
 };
 
