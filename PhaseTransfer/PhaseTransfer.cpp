@@ -16,7 +16,7 @@ int main() {
 	addParticles(universe, type, sizeX, sizeY, 500);
 	Display display(sizeX, sizeY, "Phase Transfer");
 	for(int i = 0; i < 200000; ++i) {
-		display.update(universe, 1. / 60);
+		const CallbackHandler &handler = display.update(universe, 1. / 60);
 		for(int j = 0; j < 5; ++j) {
 			universe.advance(0.2);
 		}
