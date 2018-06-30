@@ -24,27 +24,28 @@ ParticleState ParticleType::derivative(const ParticleState &state, const Vector2
 Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const {
     const double totalRadius = radius + other.radius;
     const double totalExclusionFactor = exclusionConstant * other.exclusionConstant;
-    const double totalDipoleFactor = -dipoleMoment * other.dipoleMoment;
+    const double totalDipoleFactor = dipoleMoment * other.dipoleMoment;
     const double minRange = std::min(range, other.range);
 
-    Vector2D distVec = otherState.pos - myState.pos;
-    double dist = distVec.magnitude();
-    double forceFactor = computeForceFactor(totalRadius, minRange, dist);
-    Vector2D direction = distVec.norm();
-    if(forceFactor == 0 || distVec.magnitude() < 1e-6) {
+    Vector2D dVec = myState.pos - otherState.pos;
+    double d = dVec.magnitude();
+    double forceFactor = computeForceFactor(totalRadius, minRange, d);
+    Vector2D direction = dVec.norm();
+    if(forceFactor == 0 || dVec.magnitude() < 1e-6) {
         return Vector2D(0, 0);
     }
 
-    double exclusionForce = totalExclusionFactor * dist * exp(-(dist * dist));
-    double dipoleForce = totalDipoleFactor * dist * dist / (1. + dist * dist * dist * dist * dist * dist);
-    double totalForce = exclusionForce + dipoleForce;
+    double totalForce = (totalExclusionFactor * d - totalDipoleFactor * d * d * d) * exp(-(d * d) / (totalRadius * totalRadius));
+    //double exclusionForce = totalExclusionFactor * d * exp(-(d * d));
+    //double dipoleForce = totalDipoleFactor * d * d / (totalRadius + d * d * d * d * d * d);
+    //double totalForce = exclusionForce + dipoleForce;
     double cutoffForce = totalForce * forceFactor;
 
     return direction * cutoffForce;
 }
 
-double ParticleType::computeForceFactor(double totalRadius, double minRange, double dist) const {
-    return superSmoothZeroToOne((minRange - dist) / totalRadius);
+double ParticleType::computeForceFactor(double totalRadius, double minRange, double d) const {
+    return superSmoothZeroToOne((minRange - d) / totalRadius);
 }
 
 // Super smooth function with f(x <= 0) == 0, f(x >= 1) == 1

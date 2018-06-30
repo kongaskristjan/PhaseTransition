@@ -16,7 +16,9 @@ int main() {
 	Display display(sizeX, sizeY, "Phase Transfer");
 	for(int i = 0; i < 200000; ++i) {
 		display.update(universe, 1. / 60);
-		universe.advance(1.0);
+		for(int j = 0; j < 5; ++j) {
+			universe.advance(0.2);
+		}
 	}
 
 	return 0;
@@ -25,9 +27,11 @@ int main() {
 ParticleType getParticleType() {
 	double mass = 1.0;
 	double radius = 4.0;
-	double exclusionConstant = 5.0;
-	double dipoleMoment = 10.0;
-	double range = 50.0;
+
+	double forceFactor = 1.0;
+	double exclusionConstant = 1 * forceFactor / radius;
+	double dipoleMoment = 2 * forceFactor / (radius * radius * radius);
+	double range = 5 * radius;
 
 	return ParticleType(mass, radius, exclusionConstant, dipoleMoment, range);
 }
