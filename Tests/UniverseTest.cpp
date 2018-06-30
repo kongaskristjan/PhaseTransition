@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 TEST(UniverseTest, ParticleScatter) {
-    Universe universe(400, 400, 1);
+    Universe universe(400, 400, 1, 0);
     ParticleType type(1, 1, 1, 1, 10);
     ParticleState state0(Vector2D(200, 200)); // Standing particle
     ParticleState state1(Vector2D(150, 195), Vector2D(1, 0)); // Particle to be deflected
@@ -22,7 +22,7 @@ TEST(UniverseTest, ParticleScatter) {
 }
 
 TEST(UniverseTest, Bounds) {
-    Universe universe(10, 10, 1);
+    Universe universe(10, 10, 1, 0);
     ParticleType type(1, 1, 0, 0, 0); // Non-interacting particle
     ParticleState state0(Vector2D(5, 5), Vector2D(1, 0));
     ParticleState state1(Vector2D(5, 5), Vector2D(0, 1));
@@ -36,4 +36,16 @@ TEST(UniverseTest, Bounds) {
     ASSERT_LT(std::get<ParticleState>(universe.getParticle(0)).pos.x, 15);
     ASSERT_GT(std::get<ParticleState>(universe.getParticle(1)).pos.y, -5);
     ASSERT_LT(std::get<ParticleState>(universe.getParticle(1)).pos.y, 15);
+}
+
+TEST(UniverseTest, Gravity) {
+    Universe universe(10, 10, 0, 1);
+    ParticleType type(1, 1, 0, 0, 0); // Non-interacting particle
+    ParticleState state(Vector2D(5, 5));
+    universe.addParticle(type, state);
+
+    const double dT = 1e-2;
+    for(double t = 0; t < 100; t += dT) universe.advance(dT); // Particles would be out of Universe if not bounded
+
+    ASSERT_GT(std::get<ParticleState>(universe.getParticle(0)).pos.y, state.pos.y);
 }

@@ -9,8 +9,9 @@ ParticleType getParticleType();
 void addParticles(Universe &universe, const ParticleType &type, size_t sizeX, size_t sizeY, size_t nParticles);
 
 int main() {
-	size_t sizeX = 1920, sizeY = 1080;
-	Universe universe(sizeX, sizeY, 1e-2);
+	size_t sizeX = 300, sizeY = 300;
+	double gravity = 1e-3;
+	Universe universe(sizeX, sizeY, 1e-2, gravity);
 	ParticleType type = getParticleType();
 	addParticles(universe, type, sizeX, sizeY, 500);
 	Display display(sizeX, sizeY, "Phase Transfer");

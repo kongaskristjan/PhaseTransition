@@ -13,9 +13,9 @@ UniverseState operator*(const UniverseState &lhs, double rhs);
 
 struct UniverseDifferentiator {
     std::vector<ParticleType> particles;
-    double sizeX, sizeY, forceFactor;
+    double sizeX, sizeY, forceFactor, gravity;
 
-    UniverseDifferentiator(double sizeX, double sizeY, double forceFactor);
+    UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity);
     void addParticle(UniverseState &state, const ParticleType &pType, const ParticleState &pState);
     UniverseState derivative(const UniverseState &state) const;
 
@@ -25,7 +25,7 @@ private:
 
 class Universe {
 public:
-    Universe(double _sizeX, double _sizeY, double _forceFactor);
+    Universe(double sizeX, double sizeY, double forceFactor, double gravity);
     void addParticle(const ParticleType &pType, const ParticleState &pState);
     void advance(double dT);
 

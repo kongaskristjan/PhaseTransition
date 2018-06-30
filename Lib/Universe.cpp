@@ -23,10 +23,11 @@ UniverseState operator*(const UniverseState &lhs, double rhs) {
     return newState;
 }
 
-UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor) {
+UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity) {
     sizeX = _sizeX;
     sizeY = _sizeY;
     forceFactor = _forceFactor;
+    gravity = _gravity;
 }
 
 void UniverseDifferentiator::addParticle(UniverseState &state, const ParticleType &pType, const ParticleState &pState) {
@@ -47,6 +48,7 @@ UniverseState UniverseDifferentiator::derivative(const UniverseState &state) con
         forces[i].x -= boundForce(state.state[i].pos.x - sizeX);
         forces[i].y += boundForce(-state.state[i].pos.y);
         forces[i].y -= boundForce(state.state[i].pos.y - sizeY);
+        forces[i].y += gravity * particles[i].getMass();
     }
 
     UniverseState der;
@@ -62,7 +64,7 @@ double UniverseDifferentiator::boundForce(double overEdge) const {
     return forceFactor * overEdge * overEdge * overEdge * overEdge;
 }
 
-Universe::Universe(double sizeX, double sizeY, double forceFactor): diff(sizeX, sizeY, forceFactor) {
+Universe::Universe(double sizeX, double sizeY, double forceFactor, double gravity): diff(sizeX, sizeY, forceFactor, gravity) {
 }
 
 void Universe::addParticle(const ParticleType &pType, const ParticleState &pState) {

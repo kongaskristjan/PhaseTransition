@@ -8,7 +8,7 @@ TEST(ParticleTest, ForcePlausibility) {
     ParticleType type0(1, 1, 1, 1, 10);
     ParticleType type1(2, 2, 2, 2, 20);
     ParticleState state0(Vector2D(0, 0));
-    ParticleState state1(Vector2D(1, 0));
+    ParticleState state1(Vector2D(2, 0));
 
     Vector2D force0 = type0.computeForce(type1, state0, state1);
     Vector2D force1 = type1.computeForce(type0, state1, state0);
