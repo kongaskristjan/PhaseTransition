@@ -14,11 +14,11 @@ TEST(UniverseTest, ParticleScatter) {
     double t = 0;
     for(; t < 30; t += dT) universe.advance(dT); // Particles haven't yet interacted
 
-    EXPECT_NE(std::get<ParticleState>(universe.getParticle(1)).pos.x, state1.pos.x);
-    EXPECT_DOUBLE_EQ(std::get<ParticleState>(universe.getParticle(1)).pos.y, state1.pos.y);
+    EXPECT_NE(std::get<const ParticleState &>(universe.getConstParticle(1)).pos.x, state1.pos.x);
+    EXPECT_DOUBLE_EQ(std::get<const ParticleState &>(universe.getConstParticle(1)).pos.y, state1.pos.y);
 
     for(; t < 70; t += dT) universe.advance(dT); // Particles have interacted
-    EXPECT_NE(std::get<ParticleState>(universe.getParticle(1)).pos.y, state1.pos.y);
+    EXPECT_NE(std::get<const ParticleState &>(universe.getConstParticle(1)).pos.y, state1.pos.y);
 }
 
 TEST(UniverseTest, Bounds) {
@@ -32,10 +32,10 @@ TEST(UniverseTest, Bounds) {
     const double dT = 1e-2;
     for(double t = 0; t < 100; t += dT) universe.advance(dT); // Particles would be out of Universe if not bounded
 
-    ASSERT_GT(std::get<ParticleState>(universe.getParticle(0)).pos.x, -5);
-    ASSERT_LT(std::get<ParticleState>(universe.getParticle(0)).pos.x, 15);
-    ASSERT_GT(std::get<ParticleState>(universe.getParticle(1)).pos.y, -5);
-    ASSERT_LT(std::get<ParticleState>(universe.getParticle(1)).pos.y, 15);
+    ASSERT_GT(std::get<const ParticleState &>(universe.getConstParticle(0)).pos.x, -5);
+    ASSERT_LT(std::get<const ParticleState &>(universe.getConstParticle(0)).pos.x, 15);
+    ASSERT_GT(std::get<const ParticleState &>(universe.getConstParticle(1)).pos.y, -5);
+    ASSERT_LT(std::get<const ParticleState &>(universe.getConstParticle(1)).pos.y, 15);
 }
 
 TEST(UniverseTest, Gravity) {
@@ -47,5 +47,5 @@ TEST(UniverseTest, Gravity) {
     const double dT = 1e-2;
     for(double t = 0; t < 100; t += dT) universe.advance(dT); // Particles would be out of Universe if not bounded
 
-    ASSERT_GT(std::get<ParticleState>(universe.getParticle(0)).pos.y, state.pos.y);
+    ASSERT_GT(std::get<const ParticleState &>(universe.getConstParticle(0)).pos.y, state.pos.y);
 }

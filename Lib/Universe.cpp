@@ -48,6 +48,7 @@ UniverseState UniverseDifferentiator::derivative(const UniverseState &state) con
         forces[i].x -= boundForce(state.state[i].pos.x - sizeX);
         forces[i].y += boundForce(-state.state[i].pos.y);
         forces[i].y -= boundForce(state.state[i].pos.y - sizeY);
+
         forces[i].y += gravity * particles[i].getMass();
     }
 

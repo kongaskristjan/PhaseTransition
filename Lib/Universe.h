@@ -30,8 +30,11 @@ public:
     void advance(double dT);
 
     inline size_t size() const { return state.state.size(); }
-    inline std::tuple<ParticleType, ParticleState> getParticle(size_t idx) const {
-        return std::make_tuple(diff.particles[idx], state.state[idx]);
+    inline std::tuple<const ParticleType &, const ParticleState &> getConstParticle(size_t idx) const {
+        return std::make_tuple(std::cref(diff.particles[idx]), std::cref(state.state[idx]));
+    }
+    inline std::tuple<ParticleType &, ParticleState &> getParticle(size_t idx) {
+        return std::make_tuple(std::ref(diff.particles[idx]), std::ref(state.state[idx]));
     }
 
 private:
