@@ -37,13 +37,21 @@ Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleSta
         return Vector2D(0, 0);
     }
 
-    double totalForce = (totalExclusionFactor * d - totalDipoleFactor * d * d * d) * exp(-(d * d) / (totalRadius * totalRadius));
-    //double exclusionForce = totalExclusionFactor * d * exp(-(d * d));
-    //double dipoleForce = totalDipoleFactor * d * d / (totalRadius + d * d * d * d * d * d);
-    //double totalForce = exclusionForce + dipoleForce;
+    double dNorm = d / totalRadius;
+    double exclusionForce = totalExclusionFactor * computeForceComponent(dNorm);
+    double dipoleForce = -totalDipoleFactor * computeForceComponent(0.5 * dNorm);
+    double totalForce = exclusionForce + dipoleForce;
     double cutoffForce = totalForce * forceFactor;
 
     return direction * cutoffForce;
+}
+
+double ParticleType::computeForceComponent(double d) const {
+    double d2 = d * d;
+    double d4 = d2 * d2;
+    double d8 = d4 * d4;
+    double d16 = d8 * d8;
+    return exp(-d16);
 }
 
 double ParticleType::computeForceFactor(double totalRadius, double minRange, double d) const {

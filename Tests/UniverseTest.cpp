@@ -6,7 +6,7 @@ TEST(UniverseTest, ParticleScatter) {
     Universe universe(400, 400, 1, 0);
     ParticleType type(1, 1, 1, 1, 10);
     ParticleState state0(Vector2D(200, 200)); // Standing particle
-    ParticleState state1(Vector2D(150, 195), Vector2D(1, 0)); // Particle to be deflected
+    ParticleState state1(Vector2D(150, 199), Vector2D(1, 0)); // Particle to be deflected
     universe.addParticle(type, state0);
     universe.addParticle(type, state1);
 

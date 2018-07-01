@@ -21,12 +21,14 @@ public:
         const cv::Scalar &_color = cv::Scalar(255, 255, 255));
     ParticleState derivative(const ParticleState &state, const Vector2D &force) const;
     Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
-    inline double forceRange() const { return range; }
+
+    inline double getRange() const { return range; }
     inline double getMass() const { return mass; }
     inline double getRadius() const { return radius; }
     inline const cv::Scalar& getColor() const { return color; }
 
 private:
+    double computeForceComponent(double d) const;
     double computeForceFactor(double totalRadius, double minRange, double dist) const;
     double superSmoothZeroToOne(double x) const;
 

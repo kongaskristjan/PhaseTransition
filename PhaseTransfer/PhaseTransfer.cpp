@@ -30,8 +30,8 @@ ParticleType getParticleType() {
 	double radius = 4.0;
 
 	double forceFactor = 1.0;
-	double exclusionConstant = 1 * forceFactor / radius;
-	double dipoleMoment = 2 * forceFactor / (radius * radius * radius);
+	double exclusionConstant = 2 * forceFactor;
+	double dipoleMoment = 0.8 * forceFactor;
 	double range = 5 * radius;
 
 	return ParticleType(mass, radius, exclusionConstant, dipoleMoment, range);

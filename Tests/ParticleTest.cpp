@@ -23,7 +23,7 @@ TEST(ParticleTest, ForcePlausibility) {
 TEST(ParticleTest, ForceSmoothness) {
     ParticleType type(1, 1, 1, 1, 10);
     ParticleState state0(Vector2D(0, 0));
-    double range = type.forceRange();
+    double range = type.getRange();
 
     std::vector<double> forces;
     const double diff = 1e-3;
@@ -41,7 +41,7 @@ TEST(ParticleTest, ForceRange) {
     ParticleType type0(1, 1, 1, 1, 3);
     ParticleType type1(2, 2, 2, 2, 3);
 
-    double range = std::min(type0.forceRange(), type1.forceRange());
+    double range = std::min(type0.getRange(), type1.getRange());
     ParticleState state0(Vector2D(0, 0));
     ParticleState state1(Vector2D(range - 1., 0));
     ParticleState state2(Vector2D(range, 0));
