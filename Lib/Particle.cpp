@@ -9,12 +9,14 @@ ParticleState operator+(const ParticleState & lhs, const ParticleState & rhs) { 
 ParticleState operator*(const ParticleState & lhs, double rhs) { return ParticleState(lhs.pos * rhs, lhs.v * rhs); }
 
 
-ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range) {
+ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range,
+    const cv::Scalar &_color) {
     mass = _mass;
     radius = _radius;
     exclusionConstant = _exclusionConstant;
     dipoleMoment = _dipoleMoment;
     range = _range;
+    color = _color;
 }
 
 ParticleState ParticleType::derivative(const ParticleState &state, const Vector2D &force) const {

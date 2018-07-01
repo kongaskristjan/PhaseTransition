@@ -13,7 +13,8 @@ const CallbackHandler & Display::update(const Universe &universe, double waitSec
     auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
     for(size_t i = 0; i < universe.size(); ++i) {
         auto [type, state] = universe.getParticle(i);
-        cv::circle(img, cv::Point2i(state.pos.x, state.pos.y), 3, cv::Scalar(255, 255, 255), -1);
+        auto radius = 0.6 * type.getRadius();
+        cv::circle(img, cv::Point2i(state.pos.x, state.pos.y), radius, type.getColor(), -1);
     }
     cv::imshow(caption, img);
     cv::waitKey(1000 * waitSeconds);
