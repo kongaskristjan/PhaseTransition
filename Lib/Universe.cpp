@@ -30,11 +30,6 @@ UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, dou
     gravity = _gravity;
 }
 
-void UniverseDifferentiator::addParticle(UniverseState &state, const ParticleType &pType, const ParticleState &pState) {
-    particles.push_back(pType);
-    state.state.push_back(pState);
-}
-
 UniverseState UniverseDifferentiator::derivative(const UniverseState &state) const {
     std::vector<Vector2D> forces(particles.size());
     for(size_t i = 0; i < particles.size(); ++i) {
@@ -69,7 +64,13 @@ Universe::Universe(double sizeX, double sizeY, double forceFactor, double gravit
 }
 
 void Universe::addParticle(const ParticleType &pType, const ParticleState &pState) {
-    diff.addParticle(state, pType, pState);
+    diff.particles.push_back(pType);
+    state.state.push_back(pState);
+}
+
+void Universe::removeParticle(int index) {
+    diff.particles.erase(diff.particles.begin() + index);
+    state.state.erase(state.state.begin() + index);
 }
 
 void Universe::advance(double dT) {

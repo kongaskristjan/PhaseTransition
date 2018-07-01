@@ -16,7 +16,6 @@ struct UniverseDifferentiator {
     double sizeX, sizeY, forceFactor, gravity;
 
     UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity);
-    void addParticle(UniverseState &state, const ParticleType &pType, const ParticleState &pState);
     UniverseState derivative(const UniverseState &state) const;
 
 private:
@@ -27,6 +26,7 @@ class Universe {
 public:
     Universe(double sizeX, double sizeY, double forceFactor, double gravity);
     void addParticle(const ParticleType &pType, const ParticleState &pState);
+    void removeParticle(int index);
     void advance(double dT);
 
     inline size_t size() const { return state.state.size(); }

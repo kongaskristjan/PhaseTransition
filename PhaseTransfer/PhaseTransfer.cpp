@@ -19,7 +19,7 @@ int main() {
 
 	for(int i = 0; i < 200000; ++i) {
 		const CallbackHandler &handler = display.update(universe, 1. / 60);
-		modifyUniverse(universe, handler, dT);
+		UniverseModifier::modify(universe, handler, dT, type);
 
 		for(int j = 0; j < 5; ++j) {
 			universe.advance(dT / 5);

@@ -4,7 +4,7 @@
 #include "Lib/Universe.h"
 #include "Lib/Vector2.h"
 
-enum class MouseAction { heat, push };
+enum class MouseAction { heat, push, create, spray };
 
 struct CallbackHandler {
     Vector2D pos = Vector2D(1e6, 1e6);
@@ -19,7 +19,14 @@ struct CallbackHandler {
     void drawPointer(cv::Mat &img);
 };
 
-void modifyUniverse(Universe &universe, const CallbackHandler &handler, double dT);
+class UniverseModifier {
+public:
+    static void modify(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+
+private:
+    static void modifyExisting(Universe &universe, const CallbackHandler &handler, double dT);
+    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+};
 
 class Display {
 public:
