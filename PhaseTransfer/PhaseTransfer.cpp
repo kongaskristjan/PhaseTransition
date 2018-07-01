@@ -9,16 +9,20 @@ ParticleType getParticleType();
 void addParticles(Universe &universe, const ParticleType &type, size_t sizeX, size_t sizeY, size_t nParticles);
 
 int main() {
-	size_t sizeX = 300, sizeY = 300;
-	double gravity = 1e-3;
+	size_t sizeX = 1920, sizeY = 1080;
+	const double dT = 0.5;
+	double gravity = 1e-2;
 	Universe universe(sizeX, sizeY, 1e-2, gravity);
 	ParticleType type = getParticleType();
 	addParticles(universe, type, sizeX, sizeY, 500);
 	Display display(sizeX, sizeY, "Phase Transfer");
+
 	for(int i = 0; i < 200000; ++i) {
 		const CallbackHandler &handler = display.update(universe, 1. / 60);
+		modifyUniverse(universe, handler, dT);
+
 		for(int j = 0; j < 5; ++j) {
-			universe.advance(0.2);
+			universe.advance(dT / 5);
 		}
 	}
 

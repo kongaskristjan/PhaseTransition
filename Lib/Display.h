@@ -2,14 +2,22 @@
 #define __DISPLAY_H__
 
 #include "Lib/Universe.h"
+#include "Lib/Vector2.h"
 
 struct CallbackHandler {
-    int x, y, flags;
+    Vector2D pos = Vector2D(1e6, 1e6);
+    int increase = 0; // left mouse = 1, none = 0, right mouse = -1
+    double radius = 50;
     bool leftDown = false, rightDown = false;
 
+    char key = 't';
+
     static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
+    void setKey(int _key);
+    void drawPointer(cv::Mat &img);
 };
 
+void modifyUniverse(Universe &universe, const CallbackHandler &handler, double dT);
 
 class Display {
 public:
