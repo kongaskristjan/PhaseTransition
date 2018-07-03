@@ -36,11 +36,18 @@ void CallbackHandler::setActionFromKey(int key) {
 }
 
 void CallbackHandler::drawPointer(cv::Mat &img) {
-    auto color = cv::Scalar(255, 255, 255);
-    if(sign > 0) color = cv::Scalar(0, 0, 255);
-    if(sign < 0) color = cv::Scalar(255, 0, 0);
-    
-    cv::circle(img, cv::Point(pos.x, pos.y), radius, color, 1);
+    auto circleColor = cv::Scalar(255, 255, 255);
+    if(sign > 0) circleColor = cv::Scalar(0, 0, 255);
+    if(sign < 0) circleColor = cv::Scalar(255, 0, 0);
+    cv::circle(img, cv::Point(pos.x, pos.y), radius, circleColor, 1);
+
+    std::string text = "";
+    if(action == MouseAction::heat) text = "Heat mode";
+    if(action == MouseAction::push) text = "Push mode";
+    if(action == MouseAction::create) text = "Create mode";
+    if(action == MouseAction::spray) text = "Spray mode";
+    auto textColor = cv::Scalar(255, 255, 255);
+    cv::putText(img, text, cv::Point(30, 60), cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
 }
 
 
