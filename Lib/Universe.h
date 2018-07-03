@@ -28,6 +28,7 @@ public:
     void addParticle(const ParticleType &pType, const ParticleState &pState);
     void removeParticle(int index);
     void advance(double dT);
+    Vector2D clampInto(const Vector2D &pos);
 
     inline size_t size() const { return state.state.size(); }
     inline std::tuple<const ParticleType &, const ParticleState &> getConstParticle(size_t idx) const {

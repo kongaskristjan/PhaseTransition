@@ -3,6 +3,7 @@
 #include "Lib/Universe.h"
 #include <vector>
 #include <cassert>
+#include <algorithm>
 
 UniverseState operator+(const UniverseState &lhs, const UniverseState &rhs) {
     assert(lhs.state.size() == rhs.state.size());
@@ -75,4 +76,10 @@ void Universe::removeParticle(int index) {
 
 void Universe::advance(double dT) {
     advanceRungeKutta4(state, diff, dT);
+}
+
+Vector2D Universe::clampInto(const Vector2D &pos) {
+    double newX = std::min(std::max(pos.x, 0.), diff.sizeX);
+    double newY = std::min(std::max(pos.y, 0.), diff.sizeY);
+    return Vector2D(newX, newY);
 }

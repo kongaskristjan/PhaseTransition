@@ -86,8 +86,6 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
 void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type) {
     if(handler.sign <= 0) return;
 
-    //const double creationPerArea = 0.01;
-    const double sprayPerSecond = 10;
     const double sprayParticleSpeedCoef = 0.08;
 
     auto phiDistr = std::uniform_real_distribution<>(0., 2 * M_PI);
@@ -99,7 +97,8 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
     case MouseAction::create: {
         double phi = phiDistr(randomGenerator);
         double r = rDistr(randomGenerator);
-        auto state = ParticleState(handler.pos + Vector2D(r * cos(phi), r * sin(phi)));
+        auto pos = universe.clampInto(handler.pos + Vector2D(r * cos(phi), r * sin(phi)));
+        auto state = ParticleState(pos);
         universe.addParticle(type, state);
         break;
     }
