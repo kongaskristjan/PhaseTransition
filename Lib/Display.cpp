@@ -60,7 +60,7 @@ void UniverseModifier::modify(Universe &universe, const CallbackHandler &handler
 
 void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler &handler, double dT) {
     const double heatingSpeed = 0.1;
-    const double pushingSpeed = 1.5;
+    const double pushingSpeed = 0.5, pullingSpeed = 0.2;
     const double removeSpeed = 0.5;
 
     for(size_t i = 0; i < universe.size(); ++i) {
@@ -71,10 +71,18 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
                 state.v *= 1. + handler.sign * heatingSpeed * dT;
                 break;
             case MouseAction::push:
-                state.v += (state.pos - handler.pos) * (handler.sign * pushingSpeed * dT / handler.radius);
-                state.v *= 1. - heatingSpeed * dT;
+                if(handler.sign > 0) {
+                    state.v += (state.pos - handler.pos) * (pushingSpeed * dT / handler.radius);
+                } else if (handler.sign < 0) {
+                    state.v -= (state.pos - handler.pos) * (pullingSpeed * dT / handler.radius);
+                    state.v *= 1. - heatingSpeed * dT;
+                }
                 break;
             case MouseAction::create:
+                if(handler.sign > 0) { // pull and slow particles
+                    state.v -= (state.pos - handler.pos) * (pullingSpeed * dT / handler.radius);
+                    state.v *= 1. - heatingSpeed * dT;
+                }
             case MouseAction::spray:
                 if(handler.sign == -1) {
                     double prob = removeSpeed * dT;

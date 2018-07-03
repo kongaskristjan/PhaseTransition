@@ -12,7 +12,7 @@ struct CallbackHandler {
     double radius = 50;
     bool leftDown = false, rightDown = false;
 
-    MouseAction action = MouseAction::heat;
+    MouseAction action = MouseAction::create;
 
     static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
     void setActionFromKey(int _key);
