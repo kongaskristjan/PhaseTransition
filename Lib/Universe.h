@@ -16,7 +16,6 @@ struct UniverseDifferentiator {
     double sizeX, sizeY, forceFactor, gravity;
 
     UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity);
-    void addParticle(UniverseState &state, const ParticleType &pType, const ParticleState &pState);
     UniverseState derivative(const UniverseState &state) const;
 
 private:
@@ -27,11 +26,16 @@ class Universe {
 public:
     Universe(double sizeX, double sizeY, double forceFactor, double gravity);
     void addParticle(const ParticleType &pType, const ParticleState &pState);
+    void removeParticle(int index);
     void advance(double dT);
+    Vector2D clampInto(const Vector2D &pos);
 
     inline size_t size() const { return state.state.size(); }
-    inline std::tuple<ParticleType, ParticleState> getParticle(size_t idx) const {
-        return std::make_tuple(diff.particles[idx], state.state[idx]);
+    inline std::tuple<const ParticleType &, const ParticleState &> getConstParticle(size_t idx) const {
+        return std::make_tuple(std::cref(diff.particles[idx]), std::cref(state.state[idx]));
+    }
+    inline std::tuple<ParticleType &, ParticleState &> getParticle(size_t idx) {
+        return std::make_tuple(std::ref(diff.particles[idx]), std::ref(state.state[idx]));
     }
 
 private:
