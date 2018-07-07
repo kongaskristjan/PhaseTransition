@@ -13,7 +13,7 @@ int main() {
 	double gravity = 1e-2;
 	Universe universe(sizeX, sizeY, 1e-2, gravity);
 	ParticleType type = getParticleType();
-	Display display(sizeX, sizeY, "Phase Transfer");
+	Display display(sizeX, sizeY, "Phase Transition");
 
 	for(int i = 0; i < 200000; ++i) {
 		const CallbackHandler &handler = display.update(universe, 1. / 60);

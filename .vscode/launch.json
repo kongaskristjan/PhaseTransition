@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bazel-bin/PhaseTransfer/PhaseTransfer",
+            "program": "${workspaceFolder}/bazel-bin/PhaseTransition/PhaseTransition",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
