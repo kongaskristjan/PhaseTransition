@@ -5,23 +5,19 @@
 #include <cassert>
 #include <algorithm>
 
-UniverseState operator+(const UniverseState &lhs, const UniverseState &rhs) {
-    assert(lhs.state.size() == rhs.state.size());
-    UniverseState newState;
-    newState.state.reserve(lhs.state.size());
-    for(size_t i = 0; i < lhs.state.size(); ++i) {
-        newState.state.push_back(lhs.state[i] + rhs.state[i]);
+UniverseState & UniverseState::operator+=(const UniverseState &rhs) {
+    assert(state.size() == rhs.state.size());
+    for(size_t i = 0; i < state.size(); ++i) {
+        state[i] += rhs.state[i];
     }
-    return newState;
+    return *this;
 }
 
-UniverseState operator*(const UniverseState &lhs, double rhs) {
-    UniverseState newState;
-    newState.state.reserve(lhs.state.size());
-    for(size_t i = 0; i < lhs.state.size(); ++i) {
-        newState.state.push_back(lhs.state[i] * rhs);
+UniverseState & UniverseState::operator*=(double rhs) {
+    for(size_t i = 0; i < state.size(); ++i) {
+        state[i] *= rhs;
     }
-    return newState;
+    return *this;
 }
 
 UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity) {
@@ -31,8 +27,9 @@ UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, dou
     gravity = _gravity;
 }
 
-UniverseState UniverseDifferentiator::derivative(const UniverseState &state) const {
-    std::vector<Vector2D> forces(particles.size());
+void UniverseDifferentiator::derivative(UniverseState &der, const UniverseState &state) const {
+    static std::vector<Vector2D> forces;
+    forces.assign(particles.size(), Vector2D());
     for(size_t i = 0; i < particles.size(); ++i) {
         for(size_t j = 0; j < i; ++j) {
             Vector2D f = particles[i].computeForce(particles[j], state.state[i], state.state[j]);
@@ -48,12 +45,10 @@ UniverseState UniverseDifferentiator::derivative(const UniverseState &state) con
         forces[i].y += gravity * particles[i].getMass();
     }
 
-    UniverseState der;
-    der.state.reserve(particles.size());
+    der.state.resize(particles.size());
     for(size_t i = 0; i < particles.size(); ++i) {
-        der.state.push_back(particles[i].derivative(state.state[i], forces[i]));
+        der.state[i] = particles[i].derivative(state.state[i], forces[i]);
     }
-    return der;
 }
 
 double UniverseDifferentiator::boundForce(double overEdge) const {

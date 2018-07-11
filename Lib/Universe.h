@@ -6,17 +6,18 @@
 
 struct UniverseState {
     std::vector<ParticleState> state;
+
+    UniverseState & operator+=(const UniverseState &rhs);
+    UniverseState & operator*=(double rhs);
 };
 
-UniverseState operator+(const UniverseState &lhs, const UniverseState &rhs);
-UniverseState operator*(const UniverseState &lhs, double rhs);
 
 struct UniverseDifferentiator {
     std::vector<ParticleType> particles;
     double sizeX, sizeY, forceFactor, gravity;
 
     UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity);
-    UniverseState derivative(const UniverseState &state) const;
+    void derivative(UniverseState &der, const UniverseState &state) const;
 
 private:
     double boundForce(double overEdge) const;

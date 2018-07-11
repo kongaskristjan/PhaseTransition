@@ -8,12 +8,12 @@
 
 class Linear {
 public:
-    double derivative(double x) const {
-        return x;
+    void derivative(double &der, double x) const {
+        der = x;
     }
 };
 
-TEST(IntegrableTest, Exponent) {
+TEST(IntegratorTest, Exponent) {
     double xEuler = 1, xRK4 = 1;
     int nSteps = 1000;
     double dT = 1. / nSteps;

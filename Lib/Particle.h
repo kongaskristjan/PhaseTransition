@@ -10,6 +10,9 @@ struct ParticleState {
     ParticleState();
     ParticleState(const Vector2D &_pos);
     ParticleState(const Vector2D &_pos, const Vector2D &_v);
+
+    ParticleState & operator+=(const ParticleState & rhs);
+    ParticleState & operator*=(double rhs);
 };
 
 ParticleState operator+(const ParticleState & lhs, const ParticleState & rhs);
