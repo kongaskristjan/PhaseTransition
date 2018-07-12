@@ -4,6 +4,12 @@
 #include <vector>
 #include "Lib/Particle.h"
 
+struct UniverseConfig {
+    int sizeX, sizeY;
+    double forceFactor, gravity;
+};
+
+
 struct UniverseState {
     std::vector<ParticleState> state;
 
@@ -13,19 +19,20 @@ struct UniverseState {
 
 
 struct UniverseDifferentiator {
+    UniverseConfig config;
     std::vector<ParticleType> particles;
-    double sizeX, sizeY, forceFactor, gravity;
 
-    UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity);
+    UniverseDifferentiator(const UniverseConfig &config);
     void derivative(UniverseState &der, const UniverseState &state) const;
 
 private:
     double boundForce(double overEdge) const;
 };
 
+
 class Universe {
 public:
-    Universe(double sizeX, double sizeY, double forceFactor, double gravity);
+    Universe(const UniverseConfig &_config);
     void addParticle(const ParticleType &pType, const ParticleState &pState);
     void removeParticle(int index);
     void advance(double dT);

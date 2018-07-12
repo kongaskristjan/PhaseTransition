@@ -8,10 +8,10 @@
 ParticleType getParticleType();
 
 int main() {
-	size_t sizeX = 1920, sizeY = 1080;
+	int sizeX = 1920, sizeY = 1080;
 	const double dT = 0.5;
 	double gravity = 1e-2;
-	Universe universe(sizeX, sizeY, 1e-2, gravity);
+	Universe universe({ sizeX, sizeY, 1e-2, gravity });
 	ParticleType type = getParticleType();
 	Display display(sizeX, sizeY, "Phase Transition");
 

@@ -20,11 +20,7 @@ UniverseState & UniverseState::operator*=(double rhs) {
     return *this;
 }
 
-UniverseDifferentiator::UniverseDifferentiator(double _sizeX, double _sizeY, double _forceFactor, double _gravity) {
-    sizeX = _sizeX;
-    sizeY = _sizeY;
-    forceFactor = _forceFactor;
-    gravity = _gravity;
+UniverseDifferentiator::UniverseDifferentiator(const UniverseConfig &_config): config(_config) {
 }
 
 void UniverseDifferentiator::derivative(UniverseState &der, const UniverseState &state) const {
@@ -38,11 +34,11 @@ void UniverseDifferentiator::derivative(UniverseState &der, const UniverseState 
         }
 
         forces[i].x += boundForce(-state.state[i].pos.x);
-        forces[i].x -= boundForce(state.state[i].pos.x - sizeX);
+        forces[i].x -= boundForce(state.state[i].pos.x - config.sizeX);
         forces[i].y += boundForce(-state.state[i].pos.y);
-        forces[i].y -= boundForce(state.state[i].pos.y - sizeY);
+        forces[i].y -= boundForce(state.state[i].pos.y - config.sizeY);
 
-        forces[i].y += gravity * particles[i].getMass();
+        forces[i].y += config.gravity * particles[i].getMass();
     }
 
     der.state.resize(particles.size());
@@ -53,10 +49,10 @@ void UniverseDifferentiator::derivative(UniverseState &der, const UniverseState 
 
 double UniverseDifferentiator::boundForce(double overEdge) const {
     if(overEdge < 0) return 0;
-    return forceFactor * overEdge * overEdge * overEdge * overEdge;
+    return config.forceFactor * overEdge * overEdge * overEdge * overEdge;
 }
 
-Universe::Universe(double sizeX, double sizeY, double forceFactor, double gravity): diff(sizeX, sizeY, forceFactor, gravity) {
+Universe::Universe(const UniverseConfig &_config): diff(_config) {
 }
 
 void Universe::addParticle(const ParticleType &pType, const ParticleState &pState) {
@@ -74,7 +70,7 @@ void Universe::advance(double dT) {
 }
 
 Vector2D Universe::clampInto(const Vector2D &pos) {
-    double newX = std::min(std::max(pos.x, 0.), diff.sizeX);
-    double newY = std::min(std::max(pos.y, 0.), diff.sizeY);
+    double newX = std::min(std::max(pos.x, 0.), (double) diff.config.sizeX);
+    double newY = std::min(std::max(pos.y, 0.), (double) diff.config.sizeY);
     return Vector2D(newX, newY);
 }

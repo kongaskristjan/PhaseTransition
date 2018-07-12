@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 TEST(UniverseTest, ParticleScatter) {
-    Universe universe(400, 400, 1, 0);
+    Universe universe({ 400, 400, 1, 0 });
     ParticleType type(1, 1, 1, 1, 10);
     ParticleState state0(Vector2D(200, 200)); // Standing particle
     ParticleState state1(Vector2D(150, 199), Vector2D(1, 0)); // Particle to be deflected
@@ -22,7 +22,7 @@ TEST(UniverseTest, ParticleScatter) {
 }
 
 TEST(UniverseTest, Bounds) {
-    Universe universe(10, 10, 1, 0);
+    Universe universe({ 10, 10, 1, 0 });
     ParticleType type(1, 1, 0, 0, 0); // Non-interacting particle
     ParticleState state0(Vector2D(5, 5), Vector2D(1, 0));
     ParticleState state1(Vector2D(5, 5), Vector2D(0, 1));
@@ -39,7 +39,7 @@ TEST(UniverseTest, Bounds) {
 }
 
 TEST(UniverseTest, Gravity) {
-    Universe universe(10, 10, 0, 1);
+    Universe universe({ 10, 10, 0, 1 });
     ParticleType type(1, 1, 0, 0, 0); // Non-interacting particle
     ParticleState state(Vector2D(5, 5));
     universe.addParticle(type, state);
