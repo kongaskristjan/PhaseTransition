@@ -6,13 +6,13 @@
 
     class IntegrableState {
     public:
-        IntegrableState operator+(const IntegrableState &) const;
-        IntegrableState operator*(double) const;
+        IntegrableState operator+=(const IntegrableState &);
+        IntegrableState operator*=(double);
     };
 
     class Differetiator {
     public:
-        IntegrableState derivative(const IntegrableState &state) const;
+        void derivative(IntegrableState &der, const IntegrableState &state) const;
     };
 */
 
