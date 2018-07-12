@@ -63,8 +63,8 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
     const double pushingSpeed = 0.5, pullingSpeed = 0.2;
     const double removeSpeed = 0.5;
 
-    for(size_t i = 0; i < universe.size(); ++i) {
-        auto &state = universe.getState(i);
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        auto &state = *it;
         if((state.pos - handler.pos).magnitude() < handler.radius) {
             switch(handler.action) {
             case MouseAction::heat:
@@ -87,9 +87,8 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
                 if(handler.sign == -1) {
                     double prob = removeSpeed * dT;
                     if(std::bernoulli_distribution(prob)(randomGenerator)) {
-                        universe.removeParticle(i);
-                        --i;
-                        break;
+                        it = universe.erase(it);
+                        --it;
                     }
                 }
                 break;

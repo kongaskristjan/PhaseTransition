@@ -43,6 +43,9 @@ public:
     inline ParticleState & getState(size_t idx) { return state.state[idx]; }
     inline const ParticleState & getState(size_t idx) const { return state.state[idx]; }
 
+    inline auto begin() { return state.state.begin(); }
+    inline auto end() { return state.state.end(); }
+    inline auto erase(const std::vector<ParticleState>::iterator &it) { return state.state.erase(it); }
 private:
     UniverseDifferentiator diff;
     UniverseState state;
