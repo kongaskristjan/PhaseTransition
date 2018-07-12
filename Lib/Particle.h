@@ -4,7 +4,10 @@
 #include "Lib/Vector2.h"
 #include <opencv2/core.hpp>
 
+class ParticleType;
+
 struct ParticleState {
+    const ParticleType *type = nullptr;
     Vector2D pos, v;
 
     ParticleState();

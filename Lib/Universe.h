@@ -20,9 +20,9 @@ struct UniverseState {
 
 struct UniverseDifferentiator {
     UniverseConfig config;
-    std::vector<ParticleType> particles;
+    std::vector<ParticleType> types;
 
-    UniverseDifferentiator(const UniverseConfig &config);
+    UniverseDifferentiator(const UniverseConfig &config, const std::vector<ParticleType> &_types);
     void derivative(UniverseState &der, const UniverseState &state) const;
 
 private:
@@ -32,19 +32,16 @@ private:
 
 class Universe {
 public:
-    Universe(const UniverseConfig &_config);
-    void addParticle(const ParticleType &pType, const ParticleState &pState);
+    Universe(const UniverseConfig &_config, const std::vector<ParticleType> &_types);
+    void addParticle(int typeIndex, ParticleState pState);
     void removeParticle(int index);
     void advance(double dT);
     Vector2D clampInto(const Vector2D &pos);
 
     inline size_t size() const { return state.state.size(); }
-    inline std::tuple<const ParticleType &, const ParticleState &> getConstParticle(size_t idx) const {
-        return std::make_tuple(std::cref(diff.particles[idx]), std::cref(state.state[idx]));
-    }
-    inline std::tuple<ParticleType &, ParticleState &> getParticle(size_t idx) {
-        return std::make_tuple(std::ref(diff.particles[idx]), std::ref(state.state[idx]));
-    }
+    inline const ParticleType & getParticleType(size_t idx) const { return * state.state[idx].type; }
+    inline ParticleState & getState(size_t idx) { return state.state[idx]; }
+    inline const ParticleState & getState(size_t idx) const { return state.state[idx]; }
 
 private:
     UniverseDifferentiator diff;

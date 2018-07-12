@@ -21,11 +21,11 @@ struct CallbackHandler {
 
 class UniverseModifier {
 public:
-    static void modify(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+    static void modify(Universe &universe, const CallbackHandler &handler, double dT, int type);
 
 private:
     static void modifyExisting(Universe &universe, const CallbackHandler &handler, double dT);
-    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, int type);
 };
 
 class Display {
