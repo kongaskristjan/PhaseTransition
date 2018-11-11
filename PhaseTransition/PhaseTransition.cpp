@@ -8,16 +8,15 @@
 ParticleType getParticleType();
 
 int main() {
-	size_t sizeX = 1920, sizeY = 1080;
+	int sizeX = 1920, sizeY = 1080;
 	const double dT = 0.5;
 	double gravity = 1e-2;
-	Universe universe(sizeX, sizeY, 1e-2, gravity);
-	ParticleType type = getParticleType();
+	Universe universe({ sizeX, sizeY, 1e-2, gravity }, { getParticleType() });
 	Display display(sizeX, sizeY, "Phase Transition");
 
 	for(int i = 0; i < 200000; ++i) {
 		const CallbackHandler &handler = display.update(universe, 1. / 60);
-		UniverseModifier::modify(universe, handler, dT, type);
+		UniverseModifier::modify(universe, handler, dT, 0);
 
 		for(int j = 0; j < 5; ++j) {
 			universe.advance(dT / 5);

@@ -51,7 +51,7 @@ void CallbackHandler::drawPointer(cv::Mat &img) {
 }
 
 
-void UniverseModifier::modify(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type) {
+void UniverseModifier::modify(Universe &universe, const CallbackHandler &handler, double dT, int type) {
     if(! handler.sign) return; // No action from user
 
     modifyExisting(universe, handler, dT);
@@ -63,8 +63,10 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
     const double pushingSpeed = 0.5, pullingSpeed = 0.2;
     const double removeSpeed = 0.5;
 
-    for(size_t i = 0; i < universe.size(); ++i) {
-        auto [type, state] = universe.getParticle(i);
+    auto it = universe.begin();
+    while(it != universe.end()) {
+        bool skipIncrement = false;
+        auto &state = *it;
         if((state.pos - handler.pos).magnitude() < handler.radius) {
             switch(handler.action) {
             case MouseAction::heat:
@@ -87,18 +89,19 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
                 if(handler.sign == -1) {
                     double prob = removeSpeed * dT;
                     if(std::bernoulli_distribution(prob)(randomGenerator)) {
-                        universe.removeParticle(i);
-                        --i;
-                        break;
+                        it = universe.erase(it);
+                        skipIncrement = true;
                     }
                 }
                 break;
             }
         }
+
+        if(! skipIncrement) ++it;
     }
 }
 
-void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type) {
+void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT, int type) {
     if(handler.sign <= 0) return;
 
     const double sprayParticleSpeedCoef = 0.08;
@@ -134,12 +137,11 @@ Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption): siz
     cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
 }
 
-const CallbackHandler & Display::update(const Universe &universe, double waitSeconds) {
+const CallbackHandler & Display::update(Universe &universe, double waitSeconds) {
     auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
-    for(size_t i = 0; i < universe.size(); ++i) {
-        auto [type, state] = universe.getConstParticle(i);
-        auto radius = 0.6 * type.getRadius();
-        cv::circle(img, cv::Point2i(state.pos.x, state.pos.y), radius, type.getColor(), -1);
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        double radius = 0.6 * it->type->getRadius();
+        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
     }
     handler.drawPointer(img);
 

@@ -21,17 +21,17 @@ struct CallbackHandler {
 
 class UniverseModifier {
 public:
-    static void modify(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+    static void modify(Universe &universe, const CallbackHandler &handler, double dT, int type);
 
 private:
     static void modifyExisting(Universe &universe, const CallbackHandler &handler, double dT);
-    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, const ParticleType &type);
+    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, int type);
 };
 
 class Display {
 public:
     Display(size_t _sizeX, size_t _sizeY, const std::string &_caption);
-    const CallbackHandler & update(const Universe &universe, double waitSeconds);
+    const CallbackHandler & update(Universe &universe, double waitSeconds);
 
 private:
     size_t sizeX, sizeY;

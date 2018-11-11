@@ -5,8 +5,11 @@
 ParticleState::ParticleState(): pos(Vector2D(0, 0)), v(Vector2D(0, 0)) {}
 ParticleState::ParticleState(const Vector2D &_pos): pos(_pos), v(Vector2D(0, 0)) {}
 ParticleState::ParticleState(const Vector2D &_pos, const Vector2D &_v): pos(_pos), v(_v) {}
+ParticleState & ParticleState::operator+=(const ParticleState & rhs) { pos += rhs.pos; v += rhs.v; return *this; }
+ParticleState & ParticleState::operator*=(double rhs) { pos *= rhs; v *= rhs; return *this; }
 ParticleState operator+(const ParticleState & lhs, const ParticleState & rhs) { return ParticleState(lhs.pos + rhs.pos, lhs.v + rhs.v); }
 ParticleState operator*(const ParticleState & lhs, double rhs) { return ParticleState(lhs.pos * rhs, lhs.v * rhs); }
+Vector2D ParticleState::computeForce(const ParticleState &rhs) const { return type->computeForce(* rhs.type, *this, rhs); }
 
 
 ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range,
@@ -17,10 +20,6 @@ ParticleType::ParticleType(double _mass, double _radius, double _exclusionConsta
     dipoleMoment = _dipoleMoment;
     range = _range;
     color = _color;
-}
-
-ParticleState ParticleType::derivative(const ParticleState &state, const Vector2D &force) const {
-    return ParticleState(state.v, force / mass);
 }
 
 Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const {
