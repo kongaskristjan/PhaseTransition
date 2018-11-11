@@ -17,7 +17,7 @@ void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *us
     case CV_EVENT_LBUTTONUP: thisHandler.leftDown = false; break;
     case CV_EVENT_RBUTTONDOWN: thisHandler.rightDown = true; break;
     case CV_EVENT_RBUTTONUP: thisHandler.rightDown = false; break;
-    case CV_EVENT_MOUSEWHEEL:
+    case CV_EVENT_MOUSEHWHEEL:
         thisHandler.radius *= pow(1.2, cv::getMouseWheelDelta(flags));
         thisHandler.radius = std::max(thisHandler.radius, 10.);
         thisHandler.radius = std::min(thisHandler.radius, 200.);
