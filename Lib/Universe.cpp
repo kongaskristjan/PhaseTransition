@@ -1,6 +1,7 @@
 
 #include "Lib/Integrators.h"
 #include "Lib/Universe.h"
+#include <opencv2/core.hpp>
 #include <vector>
 #include <cassert>
 #include <algorithm>
@@ -154,30 +155,9 @@ void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState 
 }
 
 void UniverseDifferentiator::computeForces(UniverseState &der, const UniverseState &state) const {
-    for(int y0 = 0; y0 < (int) state.state.size(); ++y0)
-        for(int x0 = 0; x0 < (int) state.state[y0].size(); ++x0)
-            for(int i0 = 0; i0 < (int) state.state[y0][x0].size(); ++i0) {
-                const auto &pState0 = state.state[y0][x0][i0];
-                auto &pDer0 = der.state[y0][x0][i0];
-                for(int y1 = std::max(0, y0 - 1); y1 < std::min((int) state.state.size(), y0 + 2); ++y1)
-                    for(int x1 = std::max(0, x0 - 1); x1 < std::min((int) state.state[y1].size(), x0 + 2); ++x1)
-                        for(int i1 = 0; i1 < (int) state.state[y1][x1].size(); ++i1) {
-                            if(y0 == y1 && x0 == x1 && i0 == i1) goto break3;
-
-                            const auto &pState1 = state.state[y1][x1][i1];
-                            auto &pDer1 = der.state[y1][x1][i1];
-                            Vector2D f = pState0.computeForce(pState1);
-                            pDer0.v += f;
-                            pDer1.v -= f;
-                        }
-                break3:
-
-                pDer0.v.x += boundForce(-pState0.pos.x);
-                pDer0.v.x -= boundForce(pState0.pos.x - config.sizeX);
-                pDer0.v.y += boundForce(-pState0.pos.y);
-                pDer0.v.y -= boundForce(pState0.pos.y - config.sizeY);
-                pDer0.v.y += config.gravity * pState0.type->getMass();
-            }
+    assert(! state.state.empty());
+    size_t total = state.state.size() * state.state[0].size();
+    cv::parallel_for_(cv::Range{ 0, (int) total }, UniverseDifferentiator::ParallelForces{ *this, der, state });
 }
 
 void UniverseDifferentiator::forcesToAccel(UniverseState &der) const {
@@ -192,6 +172,44 @@ void UniverseDifferentiator::forcesToAccel(UniverseState &der) const {
 double UniverseDifferentiator::boundForce(double overEdge) const {
     if(overEdge < 0) return 0;
     return config.forceFactor * overEdge * overEdge * overEdge * overEdge;
+}
+
+
+UniverseDifferentiator::ParallelForces::ParallelForces(const UniverseDifferentiator &diff, UniverseState &der, const UniverseState &state)
+    : diff(diff), der(der), state(state) {
+}
+
+void UniverseDifferentiator::ParallelForces::operator()(const cv::Range& range) const {
+    assert(! state.state.empty());
+
+    const int sizeX = state.state[0].size();
+	for (int idx = range.start; idx < range.end; ++idx) {
+        int y0 = idx / sizeX;
+        int x0 = idx % sizeX;
+        for(int i0 = 0; i0 < (int) state.state[y0][x0].size(); ++i0) {
+            const auto &pState0 = state.state[y0][x0][i0];
+            auto &pDer0 = der.state[y0][x0][i0];
+            for(int y1 = std::max(0, y0 - 1); y1 < std::min((int) state.state.size(), y0 + 2); ++y1)
+                for(int x1 = std::max(0, x0 - 1); x1 < std::min((int) state.state[y1].size(), x0 + 2); ++x1)
+                    for(int i1 = 0; i1 < (int) state.state[y1][x1].size(); ++i1) {
+                        if(y0 == y1 && x0 == x1 && i0 == i1) continue;
+
+                        const auto &pState1 = state.state[y1][x1][i1];
+                        Vector2D f = pState0.computeForce(pState1);
+                        pDer0.v += f;
+                    }
+
+            pDer0.v.x += diff.boundForce(-pState0.pos.x);
+            pDer0.v.x -= diff.boundForce(pState0.pos.x - diff.config.sizeX);
+            pDer0.v.y += diff.boundForce(-pState0.pos.y);
+            pDer0.v.y -= diff.boundForce(pState0.pos.y - diff.config.sizeY);
+            pDer0.v.y += diff.config.gravity * pState0.type->getMass();
+        }
+    }
+}
+
+UniverseDifferentiator::ParallelForces& UniverseDifferentiator::ParallelForces::operator=(const ParallelForces &) {
+    return *this;
 }
 
 
