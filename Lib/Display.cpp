@@ -63,7 +63,9 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
     const double pushingSpeed = 0.5, pullingSpeed = 0.2;
     const double removeSpeed = 0.5;
 
-    for(auto it = universe.begin(); it != universe.end(); ++it) {
+    auto it = universe.begin();
+    while(it != universe.end()) {
+        bool skipIncrement = false;
         auto &state = *it;
         if((state.pos - handler.pos).magnitude() < handler.radius) {
             switch(handler.action) {
@@ -88,12 +90,14 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
                     double prob = removeSpeed * dT;
                     if(std::bernoulli_distribution(prob)(randomGenerator)) {
                         it = universe.erase(it);
-                        --it;
+                        skipIncrement = true;
                     }
                 }
                 break;
             }
         }
+
+        if(! skipIncrement) ++it;
     }
 }
 
@@ -133,13 +137,11 @@ Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption): siz
     cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
 }
 
-const CallbackHandler & Display::update(const Universe &universe, double waitSeconds) {
+const CallbackHandler & Display::update(Universe &universe, double waitSeconds) {
     auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
-    for(size_t i = 0; i < universe.size(); ++i) {
-        auto &type = universe.getParticleType(i);
-        auto &state = universe.getState(i);
-        double radius = 0.6 * type.getRadius();
-        cv::circle(img, cv::Point2i(state.pos.x, state.pos.y), radius, type.getColor(), -1);
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        double radius = 0.6 * it->type->getRadius();
+        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
     }
     handler.drawPointer(img);
 

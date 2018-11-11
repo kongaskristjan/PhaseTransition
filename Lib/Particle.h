@@ -16,6 +16,8 @@ struct ParticleState {
 
     ParticleState & operator+=(const ParticleState & rhs);
     ParticleState & operator*=(double rhs);
+
+    Vector2D computeForce(const ParticleState &rhs) const;
 };
 
 ParticleState operator+(const ParticleState & lhs, const ParticleState & rhs);
@@ -25,7 +27,6 @@ class ParticleType {
 public:
     ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range,
         const cv::Scalar &_color = cv::Scalar(255, 255, 255));
-    ParticleState derivative(const ParticleState &state, const Vector2D &force) const;
     Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
 
     inline double getRange() const { return range; }

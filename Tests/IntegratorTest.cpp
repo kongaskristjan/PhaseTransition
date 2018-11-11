@@ -8,6 +8,9 @@
 
 class Linear {
 public:
+    void prepareDifferentiation(double) const {
+    }
+
     void derivative(double &der, double x) const {
         der = x;
     }

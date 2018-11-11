@@ -48,13 +48,3 @@ TEST(ParticleTest, ForceRange) {
 
     EXPECT_DOUBLE_EQ(type0.computeForce(type1, state0, state2).x, 0);
 }
-
-TEST(ParticleTest, Derivative) {
-    ParticleType type(2, 1, 1, 1, 10);
-    ParticleState state(Vector2D(1, 1), Vector2D(1, 1));
-    Vector2D force(Vector2D(1, 1));
-
-    ParticleState der = type.derivative(state, force);
-    EXPECT_VECTOR2_EQ(der.pos, Vector2D(1, 1));
-    EXPECT_VECTOR2_EQ(der.v, Vector2D(0.5, 0.5));
-}

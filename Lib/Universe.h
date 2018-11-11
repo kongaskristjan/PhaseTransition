@@ -11,10 +11,37 @@ struct UniverseConfig {
 
 
 struct UniverseState {
-    std::vector<ParticleState> state;
+    std::vector<std::vector<std::vector<ParticleState>>> state;
+    size_t size_ = 0;
+    double sizePerBlock = 1;
 
+    void setInteractionDistance(const UniverseConfig &config, double dist);
+    void prepareDifferentiation();
+    UniverseState & operator=(const UniverseState &rhs);
     UniverseState & operator+=(const UniverseState &rhs);
     UniverseState & operator*=(double rhs);
+    size_t size() const { return size_; }
+
+    class iterator {
+    public:
+        bool operator==(const iterator &rhs) const;
+        bool operator!=(const iterator &rhs) const;
+        iterator & operator++(); // prefix increment
+        ParticleState & operator*() const;
+        ParticleState * operator->() const;
+        iterator & normalize();
+    
+        UniverseState *obj = nullptr;
+        std::vector<std::vector<std::vector<ParticleState>>>::iterator itY;
+        std::vector<std::vector<ParticleState>>::iterator itX;
+        std::vector<ParticleState>::iterator itI;
+    };
+
+    iterator begin();
+    iterator end();
+
+    void insert(const ParticleState &state);
+    iterator erase(iterator it);
 };
 
 
@@ -23,9 +50,14 @@ struct UniverseDifferentiator {
     std::vector<ParticleType> types;
 
     UniverseDifferentiator(const UniverseConfig &config, const std::vector<ParticleType> &_types);
-    void derivative(UniverseState &der, const UniverseState &state) const;
+    void prepareDifferentiation(UniverseState &state) const; // Has to be called once before every iteration
+    void derivative(UniverseState &der, UniverseState &state) const;
 
 private:
+    void initForces(UniverseState &der, const UniverseState &state) const;
+    void computeForces(UniverseState &der, const UniverseState &state) const;
+    void forcesToAccel(UniverseState &der) const;
+
     double boundForce(double overEdge) const;
 };
 
@@ -38,14 +70,11 @@ public:
     void advance(double dT);
     Vector2D clampInto(const Vector2D &pos);
 
-    inline size_t size() const { return state.state.size(); }
-    inline const ParticleType & getParticleType(size_t idx) const { return * state.state[idx].type; }
-    inline ParticleState & getState(size_t idx) { return state.state[idx]; }
-    inline const ParticleState & getState(size_t idx) const { return state.state[idx]; }
+    inline size_t size() const { return state.size(); }
 
-    inline auto begin() { return state.state.begin(); }
-    inline auto end() { return state.state.end(); }
-    inline auto erase(const std::vector<ParticleState>::iterator &it) { return state.state.erase(it); }
+    inline auto begin() { return state.begin(); }
+    inline auto end() { return state.end(); }
+    inline auto erase(const UniverseState::iterator &it) { return state.erase(it); }
 private:
     UniverseDifferentiator diff;
     UniverseState state;

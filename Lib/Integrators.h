@@ -12,6 +12,7 @@
 
     class Differetiator {
     public:
+        void prepareDifferentiation(IntegrableState &state) const; // Run every time before an integration step
         void derivative(IntegrableState &der, const IntegrableState &state) const;
     };
 */
@@ -25,6 +26,8 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
 template<typename IntegrableState, typename Differetiator>
 void advanceEuler(IntegrableState &x, const Differetiator &diff, double dT) {
     // Compact form: x = x + diff.derivative(x) * dT;
+
+    diff.prepareDifferentiation(x);
     static IntegrableState k1;
     diff.derivative(k1, x);
     k1 *= dT;
@@ -42,6 +45,8 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
        IntegrableState k4 = diff.derivative(x + k3) * dT;
        x = x + (k1 + k2 * 2 + k3 * 2 + k4) * (1. / 6.); */
 
+    diff.prepareDifferentiation(x);
+
     static IntegrableState xInitial, xAdditive;
     static IntegrableState k1, k2, k3, k4;
 
@@ -49,6 +54,7 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
 
     // Compute k1 and add to x
     diff.derivative(k1, x);
+
     k1 *= dT;
     xAdditive = k1;
     xAdditive *= 1. / 6.;
