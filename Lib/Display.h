@@ -31,7 +31,7 @@ private:
 class Display {
 public:
     Display(size_t _sizeX, size_t _sizeY, const std::string &_caption);
-    const CallbackHandler & update(Universe &universe, double waitSeconds);
+    const CallbackHandler & update(Universe &universe);
 
 private:
     size_t sizeX, sizeY;

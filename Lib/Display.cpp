@@ -137,7 +137,7 @@ Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption): siz
     cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
 }
 
-const CallbackHandler & Display::update(Universe &universe, double waitSeconds) {
+const CallbackHandler & Display::update(Universe &universe) {
     auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
     for(auto it = universe.begin(); it != universe.end(); ++it) {
         double radius = 0.6 * it->type->getRadius();
@@ -145,7 +145,8 @@ const CallbackHandler & Display::update(Universe &universe, double waitSeconds) 
     }
     handler.drawPointer(img);
 
+    // Wait and display
     cv::imshow(caption, img);
-    handler.setActionFromKey(cv::waitKey(1000 * waitSeconds));
+    handler.setActionFromKey(cv::waitKey(1));
     return handler;
 }
