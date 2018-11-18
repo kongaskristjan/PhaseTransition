@@ -4,6 +4,8 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
+#include <filesystem>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -123,9 +125,16 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 }
 
 
-Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption): sizeX(_sizeX), sizeY(_sizeY), caption(_caption) {
+Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption, const std::string &recordingPath):
+    sizeX(_sizeX), sizeY(_sizeY), caption(_caption) {
     cv::namedWindow(caption, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
+
+    if(! recordingPath.empty()) {
+        auto path = std::filesystem::path(recordingPath);
+        std::filesystem::create_directories(path.parent_path());
+        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(sizeX, sizeY));
+    }
 }
 
 const CallbackHandler & Display::update(Universe &universe) {
@@ -133,7 +142,15 @@ const CallbackHandler & Display::update(Universe &universe) {
     drawPointer(img);
     drawStats(img, universe);
 
-    // Wait and display
+    if(recorder.isOpened()) {
+        recorder.write(img);
+
+        auto now = std::chrono::system_clock::now();
+        auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+        if(millisFromEpoch % 1000 < 500)
+            drawText(img, "Recording...", cv::Point(30, 60));
+    }
+
     cv::imshow(caption, img);
     handler.setActionFromKey(cv::waitKey(1));
     return handler;
@@ -151,16 +168,20 @@ void Display::drawPointer(cv::Mat &img) const {
     if(handler.action == MouseAction::push) text = "Push mode";
     if(handler.action == MouseAction::create) text = "Create mode";
     if(handler.action == MouseAction::spray) text = "Spray mode";
-    displayText(img, text, cv::Point(30, 60));
+    drawText(img, text, cv::Point(30, 120));
 }
 
 void Display::drawStats(cv::Mat &img, Universe &universe) const {
     auto [n, velocity, temp] = computeStats(universe);
 
     const int prec = 2;
-    displayText(img, "n = " + std::to_string(n), cv::Point(30, 110));
-    displayText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 140));
-    displayText(img, "temp = " + to_string(temp, prec), cv::Point(30, 170));
+    drawText(img, "n = " + std::to_string(n), cv::Point(30, 170));
+    drawText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 200));
+    drawText(img, "temp = " + to_string(temp, prec), cv::Point(30, 230));
+}
+
+void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc) const {
+    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
 }
 
 std::tuple<int, double, double> Display::computeStats(Universe &universe) const {
@@ -190,10 +211,6 @@ std::tuple<int, double, double> Display::computeStats(Universe &universe) const 
     }
     double temp = energy / n; // E = kT * (degrees of freedom = 2) / 2, k == 1 (natural units)
     return { n, velocity.magnitude(), temp };
-}
-
-void Display::displayText(cv::Mat &img, const std::string &text, const cv::Point &loc) const {
-    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
 }
 
 cv::Mat Display::drawParticles(Universe &universe) const {

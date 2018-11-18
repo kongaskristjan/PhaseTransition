@@ -6,6 +6,7 @@ cc_library(
     linkopts = [
         "-L/usr/local/lib64",
         "-lpthread",
+        "-lstdc++fs",
         "-lopencv_dnn",
         "-lopencv_ml",
         "-lopencv_objdetect",
