@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 #include <random>
+#include <sstream>
+#include <iomanip>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -33,21 +35,6 @@ void CallbackHandler::setActionFromKey(int key) {
         case 'c': action = MouseAction::create; break;
         case 's': action = MouseAction::spray; break;
     }
-}
-
-void CallbackHandler::drawPointer(cv::Mat &img) {
-    auto circleColor = cv::Scalar(255, 255, 255);
-    if(sign > 0) circleColor = cv::Scalar(0, 0, 255);
-    if(sign < 0) circleColor = cv::Scalar(255, 0, 0);
-    cv::circle(img, cv::Point(pos.x, pos.y), radius, circleColor, 1);
-
-    std::string text = "";
-    if(action == MouseAction::heat) text = "Heat mode";
-    if(action == MouseAction::push) text = "Push mode";
-    if(action == MouseAction::create) text = "Create mode";
-    if(action == MouseAction::spray) text = "Spray mode";
-    auto textColor = cv::Scalar(255, 255, 255);
-    cv::putText(img, text, cv::Point(30, 60), cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
 }
 
 
@@ -142,15 +129,85 @@ Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption): siz
 }
 
 const CallbackHandler & Display::update(Universe &universe) {
-    auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
-    for(auto it = universe.begin(); it != universe.end(); ++it) {
-        double radius = 0.6 * it->type->getRadius();
-        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
-    }
-    handler.drawPointer(img);
+    auto img = drawParticles(universe);
+    drawPointer(img);
+    drawStats(img, universe);
 
     // Wait and display
     cv::imshow(caption, img);
     handler.setActionFromKey(cv::waitKey(1));
     return handler;
+}
+
+
+void Display::drawPointer(cv::Mat &img) const {
+    auto circleColor = cv::Scalar(255, 255, 255);
+    if(handler.sign > 0) circleColor = cv::Scalar(0, 0, 255);
+    if(handler.sign < 0) circleColor = cv::Scalar(255, 0, 0);
+    cv::circle(img, cv::Point(handler.pos.x, handler.pos.y), handler.radius, circleColor, 1);
+
+    std::string text = "";
+    if(handler.action == MouseAction::heat) text = "Heat mode";
+    if(handler.action == MouseAction::push) text = "Push mode";
+    if(handler.action == MouseAction::create) text = "Create mode";
+    if(handler.action == MouseAction::spray) text = "Spray mode";
+    displayText(img, text, cv::Point(30, 60));
+}
+
+void Display::drawStats(cv::Mat &img, Universe &universe) const {
+    auto [n, velocity, temp] = computeStats(universe);
+
+    const int prec = 2;
+    displayText(img, "n = " + std::to_string(n), cv::Point(30, 110));
+    displayText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 140));
+    displayText(img, "temp = " + to_string(temp, prec), cv::Point(30, 170));
+}
+
+std::tuple<int, double, double> Display::computeStats(Universe &universe) const {
+    int n = 0;
+    double mass = 0;
+    Vector2D momentum;
+
+    // Compute velocity
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        double pMass = it->type->getMass();
+        Vector2D &pPos = it->pos, &pV = it->v;
+        if((pPos - handler.pos).magnitude2() < handler.radius * handler.radius) {
+            ++n;
+            mass += pMass;
+            momentum += pV * pMass;
+        }
+    }
+    Vector2D velocity = momentum / mass;
+
+    // Compute kinetic energy relative to average speed
+    double energy = 0;
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        double pMass = it->type->getMass();
+        Vector2D &pPos = it->pos, &pV = it->v;
+        if((pPos - handler.pos).magnitude2() < handler.radius * handler.radius)
+            energy += (pV - velocity).magnitude2() * pMass / 2;
+    }
+    double temp = energy / n; // E = kT * (degrees of freedom = 2) / 2, k == 1 (natural units)
+    return { n, velocity.magnitude(), temp };
+}
+
+void Display::displayText(cv::Mat &img, const std::string &text, const cv::Point &loc) const {
+    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
+}
+
+cv::Mat Display::drawParticles(Universe &universe) const {
+    auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
+    for(auto it = universe.begin(); it != universe.end(); ++it) {
+        double radius = 0.6 * it->type->getRadius();
+        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
+    }
+    return img;
+}
+
+
+std::string to_string(double x, int precision) {
+    std::stringstream ss;
+    ss << std::setprecision(precision) << std::fixed << x;
+    return ss.str();
 }

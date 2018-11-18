@@ -16,7 +16,6 @@ struct CallbackHandler {
 
     static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
     void setActionFromKey(int _key);
-    void drawPointer(cv::Mat &img);
 };
 
 class UniverseModifier {
@@ -34,9 +33,18 @@ public:
     const CallbackHandler & update(Universe &universe);
 
 private:
+    cv::Mat drawParticles(Universe &universe) const;
+    void drawPointer(cv::Mat &img) const;
+    void drawStats(cv::Mat &img, Universe &universe) const;
+    std::tuple<int, double, double> computeStats(Universe &universe) const;
+    void displayText(cv::Mat &img, const std::string &text, const cv::Point &loc) const;
+
     size_t sizeX, sizeY;
     std::string caption;
     CallbackHandler handler;
+    const cv::Scalar textColor{ 255, 255, 255 };
 };
+
+std::string to_string(double x, int precision);
 
 #endif
