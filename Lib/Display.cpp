@@ -93,11 +93,12 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
 void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT, int type) {
     if(handler.sign <= 0) return;
 
+    const double creationRadiusCoef = 0.8;
     const double sprayParticleSpeedCoef = 0.08;
     const double newParticlesCoef = 0.04;
 
     auto phiDistr = std::uniform_real_distribution<>(0., 2 * M_PI);
-    std::array<double, 2> x = {0, handler.radius};
+    std::array<double, 2> x = {0, creationRadiusCoef * handler.radius};
     std::array<double, 2> y = {0, 1};
     auto rDistr = std::piecewise_linear_distribution<>(x.begin(), x.end(), y.begin());
 
