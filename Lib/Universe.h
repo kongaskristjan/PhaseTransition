@@ -84,6 +84,8 @@ public:
     Vector2D clampInto(const Vector2D &pos);
 
     inline size_t size() const { return state.size(); }
+    inline const UniverseConfig & getConfig() const { return diff.config; }
+    inline const std::vector<ParticleType> & getParticleTypes() const { return diff.types; }
 
     inline auto begin() { return state.begin(); }
     inline auto end() { return state.end(); }

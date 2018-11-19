@@ -12,6 +12,10 @@
 #include "Display.h"
 #include "Globals.h"
 
+CallbackHandler::CallbackHandler(int _totalParticleTypes):
+    totalParticleTypes(_totalParticleTypes) {
+}
+
 void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *userdata) {
     CallbackHandler &thisHandler = * (CallbackHandler *) userdata;
     if(x != -1 || y != -1) thisHandler.pos = Vector2D(x, y);
@@ -31,20 +35,24 @@ void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *us
 }
 
 void CallbackHandler::setActionFromKey(int key) {
-    switch(key) {
-        case 'h': action = MouseAction::heat; break;
-        case 'p': action = MouseAction::push; break;
-        case 'c': action = MouseAction::create; break;
-        case 's': action = MouseAction::spray; break;
+    if(key == 'h') action = MouseAction::heat;
+    if(key == 'p') action = MouseAction::push;
+    if(key == 'c') action = MouseAction::create;
+    if(key == 's') action = MouseAction::spray;
+
+    if('1' <= key && key <= '9') {
+        int newParticleType = key - '0' - 1;
+        if(newParticleType < totalParticleTypes)
+            particleTypeIdx = newParticleType;
     }
 }
 
 
-void UniverseModifier::modify(Universe &universe, const CallbackHandler &handler, double dT, int type) {
+void UniverseModifier::modify(Universe &universe, const CallbackHandler &handler, double dT) {
     if(! handler.sign) return; // No action from user
 
     modifyExisting(universe, handler, dT);
-    addNew(universe, handler, dT, type);
+    addNew(universe, handler, dT);
 }
 
 void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler &handler, double dT) {
@@ -90,12 +98,12 @@ void UniverseModifier::modifyExisting(Universe &universe, const CallbackHandler 
     }
 }
 
-void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT, int type) {
+void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler, double dT) {
     if(handler.sign <= 0) return;
 
     const double creationRadiusCoef = 0.8;
     const double sprayParticleSpeedCoef = 0.08;
-    const double newParticlesCoef = 0.04;
+    const double newParticlesCoef = 0.1;
 
     auto phiDistr = std::uniform_real_distribution<>(0., 2 * M_PI);
     std::array<double, 2> x = {0, creationRadiusCoef * handler.radius};
@@ -104,13 +112,14 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 
     switch(handler.action) {
     case MouseAction::create: {
-        int newParticles = newParticlesCoef * handler.radius + 1;
+        double particleR = universe.getParticleTypes()[handler.particleTypeIdx].getRadius();
+        int newParticles = newParticlesCoef * handler.radius / particleR + 1;
         for(int i = 0; i < newParticles; ++i) {
             double phi = phiDistr(randomGenerator);
             double r = rDistr(randomGenerator);
             auto pos = universe.clampInto(handler.pos + Vector2D(r * cos(phi), r * sin(phi)));
             auto state = ParticleState(pos);
-            universe.addParticle(type, state);
+            universe.addParticle(handler.particleTypeIdx, state);
         }
         break;
     }
@@ -118,7 +127,7 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
         double phi = phiDistr(randomGenerator);
         double velocity = sprayParticleSpeedCoef * handler.radius;
         auto state = ParticleState(handler.pos, Vector2D(velocity * cos(phi), velocity * sin(phi)));
-        universe.addParticle(type, state);
+        universe.addParticle(handler.particleTypeIdx, state);
         break;
     }
     default: break;
@@ -126,22 +135,22 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 }
 
 
-Display::Display(size_t _sizeX, size_t _sizeY, const std::string &_caption, const std::string &recordingPath):
-    sizeX(_sizeX), sizeY(_sizeY), caption(_caption) {
+Display::Display(Universe &_universe, const std::string &_caption, const std::string &recordingPath):
+    universe(_universe), caption(_caption), handler(_universe.getParticleTypes().size()) {
     cv::namedWindow(caption, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
 
     if(! recordingPath.empty()) {
         auto path = std::filesystem::path(recordingPath);
         std::filesystem::create_directories(path.parent_path());
-        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(sizeX, sizeY));
+        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeX));
     }
 }
 
-const CallbackHandler & Display::update(Universe &universe) {
-    auto img = drawParticles(universe);
+const CallbackHandler & Display::update() {
+    auto img = drawParticles();
     drawPointer(img);
-    drawStats(img, universe);
+    drawStats(img);
 
     if(recorder.isOpened()) {
         recorder.write(img);
@@ -164,28 +173,33 @@ void Display::drawPointer(cv::Mat &img) const {
     if(handler.sign < 0) circleColor = cv::Scalar(255, 0, 0);
     cv::circle(img, cv::Point(handler.pos.x, handler.pos.y), handler.radius, circleColor, 1);
 
-    std::string text = "";
-    if(handler.action == MouseAction::heat) text = "Heat mode";
-    if(handler.action == MouseAction::push) text = "Push mode";
-    if(handler.action == MouseAction::create) text = "Create mode";
-    if(handler.action == MouseAction::spray) text = "Spray mode";
-    drawText(img, text, cv::Point(30, 120));
+    std::string modeText = "";
+    if(handler.action == MouseAction::heat) modeText = "Heat mode";
+    if(handler.action == MouseAction::push) modeText = "Push mode";
+    if(handler.action == MouseAction::create) modeText = "Create mode";
+    if(handler.action == MouseAction::spray) modeText = "Spray mode";
+    drawText(img, modeText, cv::Point(30, 120));
+
+    int typeIdx = handler.particleTypeIdx;
+    auto type = universe.getParticleTypes()[typeIdx];
+    std::string typeText = std::to_string(typeIdx + 1) + ": " + type.getName();
+    drawText(img, typeText, cv::Point(30, 150), type.getColor());
 }
 
-void Display::drawStats(cv::Mat &img, Universe &universe) const {
-    auto [n, velocity, temp] = computeStats(universe);
+void Display::drawStats(cv::Mat &img) const {
+    auto [n, velocity, temp] = computeStats();
 
     const int prec = 2;
-    drawText(img, "n = " + std::to_string(n), cv::Point(30, 170));
-    drawText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 200));
-    drawText(img, "temp = " + to_string(temp, prec), cv::Point(30, 230));
+    drawText(img, "n = " + std::to_string(n), cv::Point(30, 200));
+    drawText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 230));
+    drawText(img, "temp = " + to_string(temp, prec), cv::Point(30, 260));
 }
 
-void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc) const {
-    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., textColor, 2);
+void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color) const {
+    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., color, 2);
 }
 
-std::tuple<int, double, double> Display::computeStats(Universe &universe) const {
+std::tuple<int, double, double> Display::computeStats() const {
     int n = 0;
     double mass = 0;
     Vector2D momentum;
@@ -214,8 +228,8 @@ std::tuple<int, double, double> Display::computeStats(Universe &universe) const 
     return { n, velocity.magnitude(), temp };
 }
 
-cv::Mat Display::drawParticles(Universe &universe) const {
-    auto img = cv::Mat(cv::Size(sizeX, sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
+cv::Mat Display::drawParticles() const {
+    auto img = cv::Mat(cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
     for(auto it = universe.begin(); it != universe.end(); ++it) {
         double radius = 0.6 * it->type->getRadius();
         cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);

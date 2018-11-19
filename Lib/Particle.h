@@ -25,22 +25,25 @@ ParticleState operator*(const ParticleState & lhs, double rhs);
 
 class ParticleType {
 public:
-    ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range,
-        const cv::Scalar &_color = cv::Scalar(255, 255, 255));
+    ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range);
+    ParticleType(const std::string &_name, const cv::Scalar &_color,
+        double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range);
     Vector2D computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const;
 
+    inline const std::string& getName() const { return name; }
+    inline const cv::Scalar& getColor() const { return color; }
     inline double getRange() const { return range; }
     inline double getMass() const { return mass; }
     inline double getRadius() const { return radius; }
-    inline const cv::Scalar& getColor() const { return color; }
 
 private:
     double computeForceComponent(double d) const;
     double computeForceFactor(double totalRadius, double minRange, double dist) const;
     double superSmoothZeroToOne(double x) const;
 
-    double mass, radius, exclusionConstant, dipoleMoment, range;
+    std::string name;
     cv::Scalar color;
+    double mass, radius, exclusionConstant, dipoleMoment, range;
 };
 
 #endif

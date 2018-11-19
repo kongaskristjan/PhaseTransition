@@ -12,14 +12,19 @@ ParticleState operator*(const ParticleState & lhs, double rhs) { return Particle
 Vector2D ParticleState::computeForce(const ParticleState &rhs) const { return type->computeForce(* rhs.type, *this, rhs); }
 
 
-ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range,
-    const cv::Scalar &_color) {
+ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range):
+    ParticleType("", cv::Scalar(255, 255, 255), _mass, _radius, _exclusionConstant, _dipoleMoment, _range) {
+}
+
+ParticleType::ParticleType(const std::string &_name, const cv::Scalar &_color,
+        double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range) {
+    name = _name;
+    color = _color;
     mass = _mass;
     radius = _radius;
     exclusionConstant = _exclusionConstant;
     dipoleMoment = _dipoleMoment;
     range = _range;
-    color = _color;
 }
 
 Vector2D ParticleType::computeForce(const ParticleType &other, const ParticleState &myState, const ParticleState &otherState) const {

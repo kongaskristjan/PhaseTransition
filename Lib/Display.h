@@ -8,42 +8,45 @@
 enum class MouseAction { heat, push, create, spray };
 
 struct CallbackHandler {
+    CallbackHandler(int _totalParticleTypes);
+    static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
+    void setActionFromKey(int _key);
+
     Vector2D pos = Vector2D(1e6, 1e6);
     int sign = 0; // left mouse = 1, none = 0, right mouse = -1
     double radius = 50;
     bool leftDown = false, rightDown = false;
 
     MouseAction action = MouseAction::create;
-
-    static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
-    void setActionFromKey(int _key);
+    int particleTypeIdx = 0;
+private:
+    const int totalParticleTypes = 1;
 };
 
 class UniverseModifier {
 public:
-    static void modify(Universe &universe, const CallbackHandler &handler, double dT, int type);
+    static void modify(Universe &universe, const CallbackHandler &handler, double dT);
 
 private:
     static void modifyExisting(Universe &universe, const CallbackHandler &handler, double dT);
-    static void addNew(Universe &universe, const CallbackHandler &handler, double dT, int type);
+    static void addNew(Universe &universe, const CallbackHandler &handler, double dT);
 };
 
 class Display {
 public:
-    Display(size_t _sizeX, size_t _sizeY, const std::string &_caption, const std::string &recordingPath="");
-    const CallbackHandler & update(Universe &universe);
+    Display(Universe &universe, const std::string &_caption, const std::string &recordingPath="");
+    const CallbackHandler & update();
 
 private:
-    cv::Mat drawParticles(Universe &universe) const;
+    cv::Mat drawParticles() const;
     void drawPointer(cv::Mat &img) const;
-    void drawStats(cv::Mat &img, Universe &universe) const;
-    void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc) const;
-    std::tuple<int, double, double> computeStats(Universe &universe) const;
+    void drawStats(cv::Mat &img) const;
+    void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
+    std::tuple<int, double, double> computeStats() const;
 
-    size_t sizeX, sizeY;
+    Universe &universe;
     std::string caption;
     CallbackHandler handler;
-    const cv::Scalar textColor{ 255, 255, 255 };
     cv::VideoWriter recorder;
 };
 
