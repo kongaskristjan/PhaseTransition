@@ -144,7 +144,7 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
     if(! recordingPath.empty()) {
         auto path = std::filesystem::path(recordingPath);
         std::filesystem::create_directories(path.parent_path());
-        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeX));
+        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
 }
 
