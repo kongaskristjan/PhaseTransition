@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	const double dT = 0.5;
 	const double gravity = 1e-2;
 	Universe universe({ sizeX, sizeY, 1e-2, gravity }, createAllParticleTypes());
-	Display display(universe, "Phase Transition", recordingPath);
+	Display display(universe, "Phase Transition", "Test", recordingPath);
 
 	while(true) {
 		const CallbackHandler &handler = display.update();

@@ -34,18 +34,19 @@ private:
 
 class Display {
 public:
-    Display(Universe &universe, const std::string &_caption, const std::string &recordingPath="");
+    Display(Universe &universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath="");
     const CallbackHandler & update();
 
 private:
     cv::Mat drawParticles() const;
+    void drawDisplayedCaption(cv::Mat &img) const;
     void drawPointer(cv::Mat &img) const;
     void drawStats(cv::Mat &img) const;
     void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
     std::tuple<int, double, double> computeStats() const;
 
     Universe &universe;
-    std::string caption;
+    std::string windowCaption, displayedCaption;
     CallbackHandler handler;
     cv::VideoWriter recorder;
 };

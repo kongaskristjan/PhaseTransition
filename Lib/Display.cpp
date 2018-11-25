@@ -135,10 +135,11 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 }
 
 
-Display::Display(Universe &_universe, const std::string &_caption, const std::string &recordingPath):
-    universe(_universe), caption(_caption), handler(_universe.getParticleTypes().size()) {
-    cv::namedWindow(caption, cv::WINDOW_AUTOSIZE);
-    cv::setMouseCallback(caption, CallbackHandler::mouseCallback, & handler);
+Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath):
+    universe(_universe), displayedCaption(_displayedCaption), handler(_universe.getParticleTypes().size()) {
+    windowCaption = _windowCaption + " - " + _displayedCaption;
+    cv::namedWindow(windowCaption, cv::WINDOW_AUTOSIZE);
+    cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
 
     if(! recordingPath.empty()) {
         auto path = std::filesystem::path(recordingPath);
@@ -149,6 +150,7 @@ Display::Display(Universe &_universe, const std::string &_caption, const std::st
 
 const CallbackHandler & Display::update() {
     auto img = drawParticles();
+    drawDisplayedCaption(img);
     drawPointer(img);
     drawStats(img);
 
@@ -161,11 +163,14 @@ const CallbackHandler & Display::update() {
             drawText(img, "Recording...", cv::Point(30, 60));
     }
 
-    cv::imshow(caption, img);
+    cv::imshow(windowCaption, img);
     handler.setActionFromKey(cv::waitKey(1));
     return handler;
 }
 
+void Display::drawDisplayedCaption(cv::Mat &img) const {
+    drawText(img, displayedCaption, cv::Point(30, 60), cv::Scalar(255, 255, 255));
+}
 
 void Display::drawPointer(cv::Mat &img) const {
     auto circleColor = cv::Scalar(255, 255, 255);
