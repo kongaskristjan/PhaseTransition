@@ -160,7 +160,7 @@ const CallbackHandler & Display::update() {
         auto now = std::chrono::system_clock::now();
         auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
         if(millisFromEpoch % 1000 < 500)
-            drawText(img, "Recording...", cv::Point(30, 60));
+            drawText(img, "Recording...", cv::Point(30, 30));
     }
 
     cv::imshow(windowCaption, img);
