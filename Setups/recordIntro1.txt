@@ -1,0 +1,7 @@
+recordingPrefix recording/intro/intro1-
+gravity 0
+sizeX 1920
+sizeY 1080
+particleType 1 4 2 0.8 20 small 255 255 255
+particle 1460 502 -2.5 0.25 0
+particle 660 240 1.5 1.5 0

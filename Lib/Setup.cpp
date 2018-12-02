@@ -29,6 +29,11 @@ Setup::Setup(std::string filePath) {
 
             particleTypes.emplace_back(name, color, mass, radius, exclusionConstant, dipoleMoment, range);
         }
+        if(key == "particle") {
+            ParticleSetup p;
+            fin >> p.pos.x >> p.pos.y >> p.v.x >> p.v.y >> p.type;
+            particles.push_back(p);
+        }
         if(key == "sizeX") fin >> sizeX;
         if(key == "sizeY") fin >> sizeY;
         if(key == "gravity") fin >> gravity;
@@ -38,4 +43,10 @@ Setup::Setup(std::string filePath) {
 
     assert(particleTypes.size() > 0);
     assert(sizeX > 0 && sizeY > 0);
+}
+
+
+void Setup::addParticlesToUniverse(Universe &universe) const {
+    for(const ParticleSetup &p: particles)
+        universe.addParticle(p.type, ParticleState(p.pos, p.v));
 }

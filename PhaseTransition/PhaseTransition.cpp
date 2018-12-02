@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 	std::string recordingPath;
 	if(setup.recordingPrefix != "") recordingPath = setup.recordingPrefix + currentDateTime() + ".avi";
 	Universe universe({ setup.sizeX, setup.sizeY, setup.forceFactor, setup.gravity }, setup.particleTypes);
+	setup.addParticlesToUniverse(universe);
 	Display display(universe, "Phase Transition", setup.displayedCaption, recordingPath);
 
 	while(true) {
