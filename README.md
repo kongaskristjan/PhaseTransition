@@ -1,9 +1,9 @@
 # Phase Transition
 
 Check out the following video for demo (a slightly more detailed descripion is in video description):
-[![Video of simulation](https://img.youtube.com/vi/SvmOGQdZ5BU/0.jpg)](https://youtu.be/SvmOGQdZ5BU)
+[![Video of the simulation](https://img.youtube.com/vi/SFf3pcE08NM/0.jpg)](https://youtu.be/SFf3pcE08NM)
 
-### Build and run
+### Build
 
 The following is necessary for building and running the simulation:
 
@@ -15,3 +15,9 @@ The following is necessary for building and running the simulation:
 Run ./RunOptimized.sh for optimized bazel build and running. If testing is not intended, copy the build and running command from RunOptimized.
 
 Simulation resolution, particle properties, etc. can be modified in Setups/default.txt.
+
+### Usage
+
+Use your mouse to create and influence the particles. There are four modes of interaction: creating, spraying, pushing and heating, each of which can be activated with keys c, s, p and h respectively. Once in a mode, this action can be carried out on particles by holding the left mouse button. Right mouse button does the opposite. Range of influence can be altered with mouse wheel.
+
+The number of particles, average veloity of them, and average temperature (inside the range of influence) are displayed in the upper left corner of display.
