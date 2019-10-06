@@ -1,2 +1,5 @@
 bazel-*
 recording/
+.idea/
+cmake-build-debug/
+build/
