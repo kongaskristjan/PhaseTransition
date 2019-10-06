@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 14)
 project(PhaseTransition)
 
@@ -8,8 +8,5 @@ include_directories(.)
 
 FILE(GLOB Sources PhaseTransition/*.cpp PhaseTransition/*.h Lib/*.cpp Lib/*.h)
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
 add_executable(PhaseTransition ${Sources})
-target_link_libraries(PhaseTransition ${OpenCV_LIBS} Threads::Threads)
+target_link_libraries(PhaseTransition ${OpenCV_LIBS})
