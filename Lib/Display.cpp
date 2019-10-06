@@ -142,8 +142,10 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
     cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
 
     if(! recordingPath.empty()) {
+#if __cplusplus >= 201703L
         auto path = std::filesystem::path(recordingPath);
         std::filesystem::create_directories(path.parent_path());
+#endif
         recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
 }
@@ -192,7 +194,9 @@ void Display::drawPointer(cv::Mat &img) const {
 }
 
 void Display::drawStats(cv::Mat &img) const {
-    auto [n, velocity, temp] = computeStats();
+    int n;
+    double velocity, temp;
+    std::tie(n, velocity, temp) = computeStats();
 
     const int prec = 2;
     drawText(img, "n = " + std::to_string(n), cv::Point(30, 200));

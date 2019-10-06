@@ -7,7 +7,7 @@ Check out the following video for demo (a slightly more detailed descripion is i
 
 The following is necessary for building and running the simulation:
 
-* C++17 compatible compiler (g++-8 is good enough)
+* C++14 compatible compiler
 * Bazel or cmake - for building
 * OpenCV 3.4.x - for rendering
 * gtest - for testing. Can be skipped.
