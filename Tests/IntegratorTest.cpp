@@ -11,7 +11,7 @@ public:
     void prepareDifferentiation(double) const {
     }
 
-    void derivative(double &der, double x) const {
+    void derivative(double &der, double, double x) const {
         der = x;
     }
 };

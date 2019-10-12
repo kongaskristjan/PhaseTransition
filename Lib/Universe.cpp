@@ -134,10 +134,13 @@ void UniverseDifferentiator::prepareDifferentiation(UniverseState &state) const 
     state.prepareDifferentiation();
 }
 
-void UniverseDifferentiator::derivative(UniverseState &der, UniverseState &state) const {
+void UniverseDifferentiator::derivative(UniverseState &der, UniverseState &derivativeCache, UniverseState &state) const {
+    // Using derivative cache as another accumulator for forces to avoid data race
+
     initForces(der, state);
-    computeForces(der, state);
-    forcesToAccel(der);
+    initForces(derivativeCache, state);
+    computeForces(der, derivativeCache, state);
+    forcesToAccel(der, derivativeCache);
 }
 
 void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState &state) const {
@@ -154,17 +157,20 @@ void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState 
     }
 }
 
-void UniverseDifferentiator::computeForces(UniverseState &der, const UniverseState &state) const {
+void UniverseDifferentiator::computeForces(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state) const {
     assert(! state.state.empty());
     size_t total = state.state.size() * state.state[0].size();
-    cv::parallel_for_(cv::Range{ 0, (int) total }, UniverseDifferentiator::ParallelForces{ *this, der, state });
+    cv::parallel_for_(cv::Range{ 0, (int) total },
+            UniverseDifferentiator::ParallelForces{ *this, der, derivativeCache, state });
 }
 
-void UniverseDifferentiator::forcesToAccel(UniverseState &der) const {
+void UniverseDifferentiator::forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const {
     for(size_t y = 0; y < der.state.size(); ++y)
         for(size_t x = 0; x < der.state[y].size(); ++x)
             for(size_t i = 0; i < der.state[y][x].size(); ++i) {
                 auto &pDer = der.state[y][x][i];
+                auto &pDerCache = derivativeCache.state[y][x][i];
+                pDer.v += pDerCache.v;
                 pDer.v *= 1. / pDer.type->getMass();
             }
 }
@@ -175,8 +181,9 @@ double UniverseDifferentiator::boundForce(double overEdge) const {
 }
 
 
-UniverseDifferentiator::ParallelForces::ParallelForces(const UniverseDifferentiator &diff, UniverseState &der, const UniverseState &state)
-    : diff(diff), der(der), state(state) {
+UniverseDifferentiator::ParallelForces::ParallelForces(const UniverseDifferentiator &diff,
+        UniverseState &der, UniverseState &derivativeCache, const UniverseState &state)
+    : diff(diff), der(der), derivativeCache(derivativeCache), state(state) {
 }
 
 void UniverseDifferentiator::ParallelForces::operator()(const cv::Range& range) const {
@@ -189,15 +196,22 @@ void UniverseDifferentiator::ParallelForces::operator()(const cv::Range& range) 
         for(int i0 = 0; i0 < (int) state.state[y0][x0].size(); ++i0) {
             const auto &pState0 = state.state[y0][x0][i0];
             auto &pDer0 = der.state[y0][x0][i0];
-            for(int y1 = std::max(0, y0 - 1); y1 < std::min((int) state.state.size(), y0 + 2); ++y1)
-                for(int x1 = std::max(0, x0 - 1); x1 < std::min((int) state.state[y1].size(), x0 + 2); ++x1)
-                    for(int i1 = 0; i1 < (int) state.state[y1][x1].size(); ++i1) {
-                        if(y0 == y1 && x0 == x1 && i0 == i1) continue;
+            // The if conditions avoid computing the same force twice
+            for(int y1 = std::max(0, y0 - 1); y1 < std::min((int) state.state.size(), y0 + 2); ++y1) {
+                if (y1 < y0) continue;
+                for (int x1 = std::max(0, x0 - 1); x1 < std::min((int) state.state[y1].size(), x0 + 2); ++x1) {
+                    if(y1 == y0 && x1 < x0) continue;
+                    for (int i1 = 0; i1 < (int) state.state[y1][x1].size(); ++i1) {
+                        if (y0 == y1 && x0 == x1 && i0 <= i1) continue;
 
                         const auto &pState1 = state.state[y1][x1][i1];
+                        auto &pDer1 = derivativeCache.state[y1][x1][i1];
                         Vector2D f = pState0.computeForce(pState1);
                         pDer0.v += f;
+                        pDer1.v -= f;
                     }
+                }
+            }
 
             pDer0.v.x += diff.boundForce(-pState0.pos.x);
             pDer0.v.x -= diff.boundForce(pState0.pos.x - diff.config.sizeX);

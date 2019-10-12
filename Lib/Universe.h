@@ -51,25 +51,26 @@ struct UniverseDifferentiator {
 
     UniverseDifferentiator(const UniverseConfig &config, const std::vector<ParticleType> &_types);
     void prepareDifferentiation(UniverseState &state) const; // Has to be called once before every iteration
-    void derivative(UniverseState &der, UniverseState &state) const;
+    void derivative(UniverseState &der, UniverseState &derivativeCache, UniverseState &state) const;
 
 private:
     void initForces(UniverseState &der, const UniverseState &state) const;
-    void computeForces(UniverseState &der, const UniverseState &state) const;
-    void forcesToAccel(UniverseState &der) const;
+    void computeForces(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state) const;
+    void forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const;
 
     double boundForce(double overEdge) const;
 
 public:
 	class ParallelForces : public cv::ParallelLoopBody {
 	public:
-		ParallelForces(const UniverseDifferentiator &diff, UniverseState &der, const UniverseState &state);
+		ParallelForces(const UniverseDifferentiator &diff,
+		        UniverseState &der, UniverseState &derivativeCache, const UniverseState &state);
 		void operator()(const cv::Range& range) const;
 		ParallelForces& operator=(const ParallelForces &);
 
 	private:
         const UniverseDifferentiator &diff;
-        UniverseState &der;
+        UniverseState &der, &derivativeCache;
         const UniverseState &state;
 	};
 };
