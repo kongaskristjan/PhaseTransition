@@ -8,13 +8,14 @@ Check out the following video for demo (a slightly more detailed descripion is i
 The following is necessary for building and running the simulation:
 
 * C++14 compatible compiler
-* Bazel or cmake - for building (no unit testing with cmake)
+* Bazel or cmake - for building
 * OpenCV 3.4.x - for rendering
 * gtest - for testing. Can be skipped.
 
 For bazel: run `./RunOptimized.sh`. The script can be easily modified if unit testing is not intended.
 
-For cmake: run `mkdir build && cd build` and `cmake -DCMAKE_BUILD_TYPE=Release .. && make && ./PhaseTransition ../Setups/default.txt`. 
+For cmake: run `mkdir build && cd build` and `cmake -DCMAKE_BUILD_TYPE=Release .. && make[ && ./RunTests] && ./PhaseTransition ../Setups/default.txt`,
+where `[...]` is optional.
 
 Simulation resolution, particle properties, etc. can be modified in Setups/default.txt.
 
