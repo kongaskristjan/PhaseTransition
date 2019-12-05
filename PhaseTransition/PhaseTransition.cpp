@@ -24,10 +24,11 @@ int main(int argc, char **argv) {
 		const CallbackHandler &handler = display.update();
 		UniverseModifier::modify(universe, handler, setup.dT);
 
-		for(int j = 0; j < 5; ++j) {
-			universe.advance(setup.dT / 5);
-		}
-	}
+		if(handler.quit) break;
+
+        for(int j = 0; j < 5; ++j)
+            universe.advance(setup.dT / 5);
+    }
 
 	return 0;
 }

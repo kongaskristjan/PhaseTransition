@@ -16,26 +16,27 @@ CallbackHandler::CallbackHandler(int _totalParticleTypes):
     totalParticleTypes(_totalParticleTypes) {
 }
 
-void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *userdata) {
-    CallbackHandler &thisHandler = * (CallbackHandler *) userdata;
-    if(x != -1 || y != -1) thisHandler.pos = Vector2D(x, y);
-    /*
-    switch(event) {
-    case CV_EVENT_LBUTTONDOWN: thisHandler.leftDown = true; break;
-    case CV_EVENT_LBUTTONUP: thisHandler.leftDown = false; break;
-    case CV_EVENT_RBUTTONDOWN: thisHandler.rightDown = true; break;
-    case CV_EVENT_RBUTTONUP: thisHandler.rightDown = false; break;
-    case CV_EVENT_MOUSEHWHEEL:
-        thisHandler.radius *= pow(1.2, cv::getMouseWheelDelta(flags));
-        thisHandler.radius = std::max(thisHandler.radius, 10.);
-        thisHandler.radius = std::min(thisHandler.radius, 200.);
-        break;
+void CallbackHandler::mouseCallback(const SDL_Event &event) {
+    int x, y;
+    SDL_GetMouseState(& x, & y);
+    pos = Vector2D(x, y);
+
+    if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+        bool down = event.type == SDL_MOUSEBUTTONDOWN;
+        if (event.button.button == SDL_BUTTON_LEFT) leftDown = down;
+        if (event.button.button == SDL_BUTTON_RIGHT) rightDown = down;
     }
-    thisHandler.sign = (int) thisHandler.leftDown - (int) thisHandler.rightDown;
-    */
+    if(event.type == SDL_MOUSEWHEEL) {
+        radius *= pow(1.2, -event.wheel.y);
+        radius = std::max(radius, 10.);
+        radius = std::min(radius, 200.);
+    }
+    sign = (int) leftDown - (int) rightDown;
+    std::cout << x << " " << y << "    " << sign << " " << radius << std::endl;
 }
 
-void CallbackHandler::setActionFromKey(int key) {
+void CallbackHandler::keyboardCallback(const SDL_Event &event) {
+    int key = event.key.keysym.sym;
     if(key == 'h') action = MouseAction::heat;
     if(key == 'p') action = MouseAction::push;
     if(key == 'c') action = MouseAction::create;
@@ -139,8 +140,18 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath):
     universe(_universe), displayedCaption(_displayedCaption), handler(_universe.getParticleTypes().size()) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
-    //cv::namedWindow(windowCaption, cv::WINDOW_AUTOSIZE);
-    //cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
+
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    window = SDL_CreateWindow(windowCaption.data(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                              universe.getConfig().sizeX, universe.getConfig().sizeY, SDL_WINDOW_SHOWN);
+    if(window == nullptr) {
+        std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
 
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
@@ -149,6 +160,11 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
 #endif
         //recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
+}
+
+Display::~Display() {
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 const CallbackHandler & Display::update() {
@@ -169,8 +185,17 @@ const CallbackHandler & Display::update() {
     }
     */
 
-    //cv::imshow(windowCaption, img);
-    //handler.setActionFromKey(cv::waitKey(1));
+    SDL_UpdateWindowSurface(window);
+    SDL_Event event;
+    while(SDL_PollEvent(& event)) {
+        if(event.type == SDL_QUIT)
+            handler.quit = true;
+        if(event.type == SDL_KEYDOWN)
+            handler.keyboardCallback(event);
+        if(event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEWHEEL
+                || event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP)
+            handler.mouseCallback(event);
+    }
     return handler;
 }
 /*
