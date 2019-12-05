@@ -3,6 +3,7 @@ set(CMAKE_CXX_STANDARD 14)
 project(PhaseTransition)
 
 find_package(OpenCV 3.4 REQUIRED)
+find_package(Threads REQUIRED)
 
 include_directories(.)
 
@@ -11,7 +12,7 @@ add_library(library ${LibSources})
 
 FILE(GLOB RunSources PhaseTransition/*.cpp PhaseTransition/*.h)
 add_executable(PhaseTransition ${RunSources})
-target_link_libraries(PhaseTransition library ${OpenCV_LIBS})
+target_link_libraries(PhaseTransition library ${OpenCV_LIBS} Threads::Threads)
 
 
 find_package(GTest)
@@ -19,7 +20,7 @@ find_package(GTest)
 if(GTest_FOUND)
     FILE(GLOB TestSources Tests/*.cpp)
     add_executable(RunTests ${TestSources})
-    target_link_libraries(RunTests GTest::GTest GTest::Main library ${OpenCV_LIBS})
+    target_link_libraries(RunTests library ${OpenCV_LIBS} Threads::Threads GTest::GTest GTest::Main)
 
     gtest_discover_tests(RunTests)
     add_test(NAME monolithic COMMAND RunTests)

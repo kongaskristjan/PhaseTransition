@@ -10,6 +10,7 @@ The following is necessary for building and running the simulation:
 * C++14 compatible compiler
 * cmake 3.10+ - for building
 * OpenCV 3.4.x - for rendering
+* pthreads - for threading
 * gtest - for testing. Can be skipped.
 
 Building, running tests and running program on Linux: from root directory, run `mkdir build && cd build` and
@@ -27,3 +28,7 @@ The number of particles, average veloity of them, and average temperature (insid
 ### Issues
 
 * Opencv mouse control (especially right button and wheel) does not work with some window managers
+
+### ACKNOWLEDGEMENTS
+
+* This program uses ThreadPool library by Jakob Progsch and Václav Zeman.
