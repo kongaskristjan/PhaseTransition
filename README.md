@@ -9,7 +9,6 @@ The following is necessary for building and running the simulation:
 
 * C++14 compatible compiler
 * cmake 3.10+ - for building
-* OpenCV 3.4.x - for rendering
 * pthreads - for threading
 * gtest - for testing. Can be skipped.
 
@@ -24,10 +23,6 @@ Simulation resolution, particle properties, etc. can be modified in Setups/defau
 Use your mouse to create and influence the particles. There are four modes of interaction: creating, spraying, pushing and heating, each of which can be activated with keys c, s, p and h respectively. Once in a mode, this action can be carried out on particles by holding the left mouse button. Right mouse button does the opposite. Range of influence can be altered with mouse wheel.
 
 The number of particles, average veloity of them, and average temperature (inside the range of influence) are displayed in the upper left corner of display.
-
-### Issues
-
-* Opencv mouse control (especially right button and wheel) does not work with some window managers
 
 ### ACKNOWLEDGEMENTS
 

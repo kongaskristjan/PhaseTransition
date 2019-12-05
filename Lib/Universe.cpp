@@ -1,11 +1,8 @@
 
 #include "Lib/Integrators.h"
 #include "Lib/Universe.h"
-#include <opencv2/core.hpp>
 #include <vector>
 #include <cassert>
-#include <algorithm>
-#include <atomic>
 #include <future>
 
 void UniverseState::setInteractionDistance(const UniverseConfig &config, double dist) {

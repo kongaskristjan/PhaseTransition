@@ -3,7 +3,6 @@
 
 #include "Lib/Universe.h"
 #include "Lib/Vector2.h"
-#include <opencv2/videoio.hpp>
 
 enum class MouseAction { heat, push, create, spray };
 
@@ -38,17 +37,17 @@ public:
     const CallbackHandler & update();
 
 private:
-    cv::Mat drawParticles() const;
-    void drawDisplayedCaption(cv::Mat &img) const;
-    void drawPointer(cv::Mat &img) const;
-    void drawStats(cv::Mat &img) const;
-    void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
+    //cv::Mat drawParticles() const;
+    //void drawDisplayedCaption(cv::Mat &img) const;
+    //void drawPointer(cv::Mat &img) const;
+    //void drawStats(cv::Mat &img) const;
+    //void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
     std::tuple<int, double, double> computeStats() const;
 
     Universe &universe;
     std::string windowCaption, displayedCaption;
     CallbackHandler handler;
-    cv::VideoWriter recorder;
+    //cv::VideoWriter recorder;
 };
 
 std::string to_string(double x, int precision);

@@ -5,9 +5,6 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 #include "Display.h"
 #include "Globals.h"
 
@@ -22,7 +19,7 @@ CallbackHandler::CallbackHandler(int _totalParticleTypes):
 void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *userdata) {
     CallbackHandler &thisHandler = * (CallbackHandler *) userdata;
     if(x != -1 || y != -1) thisHandler.pos = Vector2D(x, y);
-
+    /*
     switch(event) {
     case CV_EVENT_LBUTTONDOWN: thisHandler.leftDown = true; break;
     case CV_EVENT_LBUTTONUP: thisHandler.leftDown = false; break;
@@ -35,6 +32,7 @@ void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *us
         break;
     }
     thisHandler.sign = (int) thisHandler.leftDown - (int) thisHandler.rightDown;
+    */
 }
 
 void CallbackHandler::setActionFromKey(int key) {
@@ -141,24 +139,26 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath):
     universe(_universe), displayedCaption(_displayedCaption), handler(_universe.getParticleTypes().size()) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
-    cv::namedWindow(windowCaption, cv::WINDOW_AUTOSIZE);
-    cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
+    //cv::namedWindow(windowCaption, cv::WINDOW_AUTOSIZE);
+    //cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
 
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
         auto path = std::filesystem::path(recordingPath);
         std::filesystem::create_directories(path.parent_path());
 #endif
-        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
+        //recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
 }
 
 const CallbackHandler & Display::update() {
+    /*
     auto img = drawParticles();
     drawDisplayedCaption(img);
     drawPointer(img);
     drawStats(img);
-
+    */
+    /*
     if(recorder.isOpened()) {
         recorder.write(img);
 
@@ -167,12 +167,13 @@ const CallbackHandler & Display::update() {
         if(millisFromEpoch % 1000 < 500)
             drawText(img, "Recording...", cv::Point(30, 30));
     }
+    */
 
-    cv::imshow(windowCaption, img);
-    handler.setActionFromKey(cv::waitKey(1));
+    //cv::imshow(windowCaption, img);
+    //handler.setActionFromKey(cv::waitKey(1));
     return handler;
 }
-
+/*
 void Display::drawDisplayedCaption(cv::Mat &img) const {
     drawText(img, displayedCaption, cv::Point(30, 60), cv::Scalar(255, 255, 255));
 }
@@ -210,7 +211,7 @@ void Display::drawStats(cv::Mat &img) const {
 void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color) const {
     cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., color, 2);
 }
-
+*/
 std::tuple<int, double, double> Display::computeStats() const {
     int n = 0;
     double mass = 0;
@@ -239,7 +240,7 @@ std::tuple<int, double, double> Display::computeStats() const {
     double temp = energy / n; // E = kT * (degrees of freedom = 2) / 2, k == 1 (natural units)
     return { n, velocity.magnitude(), temp };
 }
-
+/*
 cv::Mat Display::drawParticles() const {
     auto img = cv::Mat(cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
     for(auto it = universe.begin(); it != universe.end(); ++it) {
@@ -248,7 +249,7 @@ cv::Mat Display::drawParticles() const {
     }
     return img;
 }
-
+*/
 
 std::string to_string(double x, int precision) {
     std::stringstream ss;

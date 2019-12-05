@@ -5,7 +5,6 @@
 #include <string>
 #include <algorithm>
 #include <cassert>
-#include <opencv2/core.hpp>
 
 Setup::Setup(std::string filePath) {
     std::ifstream fin(filePath);
@@ -25,9 +24,9 @@ Setup::Setup(std::string filePath) {
             int colorRed, colorGreen, colorBlue;
             fin >> name >> colorRed >> colorGreen >> colorBlue;
             std::replace(name.begin(), name.end(), '_', ' ');
-            cv::Scalar color(colorBlue, colorGreen, colorRed);
+            //cv::Scalar color(colorBlue, colorGreen, colorRed);
 
-            particleTypes.emplace_back(name, color, mass, radius, exclusionConstant, dipoleMoment, range);
+            particleTypes.emplace_back(name, /*color,*/ mass, radius, exclusionConstant, dipoleMoment, range);
         }
         if(key == "particle") {
             ParticleSetup p;
