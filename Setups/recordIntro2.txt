@@ -1,7 +1,7 @@
-recordingPrefix recording/intro/intro2-
+recordingPrefix ../recording/intro/intro2-
 gravity 0
 sizeX 1920
 sizeY 1080
-particleType 1 4 2 0.8 20 small 255 255 255
+particleType 1 4 2 0.8 20 small Sprites/Small.bmp
 particle 360 345 3 1 0
 particle 1060 840 -0.5 -1.5 0

@@ -40,7 +40,7 @@ public:
     const CallbackHandler & update();
 
 private:
-    //cv::Mat drawParticles() const;
+    void drawParticles() const;
     //void drawDisplayedCaption(cv::Mat &img) const;
     //void drawPointer(cv::Mat &img) const;
     //void drawStats(cv::Mat &img) const;
@@ -51,8 +51,8 @@ private:
     std::string windowCaption, displayedCaption;
     CallbackHandler handler;
     //cv::VideoWriter recorder;
-    SDL_Window *window;
-    SDL_Surface *surface;
+    SDL_Window *window = nullptr;
+    SDL_Surface *surface = nullptr;
 };
 
 std::string to_string(double x, int precision);

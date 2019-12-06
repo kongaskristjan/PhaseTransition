@@ -32,7 +32,6 @@ void CallbackHandler::mouseCallback(const SDL_Event &event) {
         radius = std::min(radius, 200.);
     }
     sign = (int) leftDown - (int) rightDown;
-    std::cout << x << " " << y << "    " << sign << " " << radius << std::endl;
 }
 
 void CallbackHandler::keyboardCallback(const SDL_Event &event) {
@@ -152,6 +151,7 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
         std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         exit(1);
     }
+    surface = SDL_GetWindowSurface(window);
 
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
@@ -169,7 +169,6 @@ Display::~Display() {
 
 const CallbackHandler & Display::update() {
     /*
-    auto img = drawParticles();
     drawDisplayedCaption(img);
     drawPointer(img);
     drawStats(img);
@@ -185,6 +184,8 @@ const CallbackHandler & Display::update() {
     }
     */
 
+    SDL_FillRect(surface, nullptr, 0x000000);
+    drawParticles();
     SDL_UpdateWindowSurface(window);
     SDL_Event event;
     while(SDL_PollEvent(& event)) {
@@ -265,16 +266,17 @@ std::tuple<int, double, double> Display::computeStats() const {
     double temp = energy / n; // E = kT * (degrees of freedom = 2) / 2, k == 1 (natural units)
     return { n, velocity.magnitude(), temp };
 }
-/*
-cv::Mat Display::drawParticles() const {
-    auto img = cv::Mat(cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
+
+void Display::drawParticles() const {
     for(auto it = universe.begin(); it != universe.end(); ++it) {
-        double radius = 0.6 * it->type->getRadius();
-        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
+        auto *particle = (SDL_Surface *) it->type->getSpriteSurface();
+        assert(particle != nullptr);
+        SDL_Rect inputRect{0, 0, particle->w, particle->h};
+        SDL_Rect outputRect{(int) it->pos.x - particle->w / 2, (int) it->pos.y - particle->h / 2, particle->w, particle->h};
+        SDL_BlitSurface(particle, & inputRect, surface, & outputRect);
     }
-    return img;
 }
-*/
+
 
 std::string to_string(double x, int precision) {
     std::stringstream ss;
