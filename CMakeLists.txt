@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 14)
 project(PhaseTransition)
 
+#add_compile_options("-pg")
+#add_link_options("-pg")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(Threads REQUIRED)
