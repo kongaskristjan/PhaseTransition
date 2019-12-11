@@ -35,24 +35,28 @@ private:
 
 class Display {
 public:
-    Display(Universe &universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath="");
+    Display(Universe &universe, const std::string &_windowCaption, const std::string &_displayedCaption,
+            const std::string &_directoryPath, const std::string &recordingPath="");
     ~Display();
     const CallbackHandler & update();
 
 private:
-    void drawParticles() const;
+    void drawParticles();
     //void drawDisplayedCaption(cv::Mat &img) const;
-    //void drawPointer(cv::Mat &img) const;
+    void drawPointer();
     //void drawStats(cv::Mat &img) const;
     //void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
+    void drawSpriteFromCenter(SDL_Surface *sprite, int x, int y);
     std::tuple<int, double, double> computeStats() const;
 
     Universe &universe;
     std::string windowCaption, displayedCaption;
+    std::string directoryPath;
     CallbackHandler handler;
     //cv::VideoWriter recorder;
     SDL_Window *window = nullptr;
     SDL_Surface *surface = nullptr;
+    SDL_Surface *defaultPointer = nullptr, *increasePointer = nullptr, *decreasePointer = nullptr;
 };
 
 std::string to_string(double x, int precision);

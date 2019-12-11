@@ -136,8 +136,10 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 }
 
 
-Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath):
-    universe(_universe), displayedCaption(_displayedCaption), handler(_universe.getParticleTypes().size()) {
+Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption,
+        const std::string &_directoryPath, const std::string &recordingPath):
+    universe(_universe), displayedCaption(_displayedCaption), directoryPath(_directoryPath),
+        handler(_universe.getParticleTypes().size()) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -152,6 +154,9 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
         exit(1);
     }
     surface = SDL_GetWindowSurface(window);
+    defaultPointer = SDL_LoadBMP((directoryPath + "Sprites/DefaultPointer.bmp").c_str());
+    increasePointer = SDL_LoadBMP((directoryPath + "Sprites/IncreasePointer.bmp").c_str());
+    decreasePointer = SDL_LoadBMP((directoryPath + "Sprites/DecreasePointer.bmp").c_str());
 
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
@@ -163,6 +168,10 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
 }
 
 Display::~Display() {
+    SDL_FreeSurface(defaultPointer);
+    SDL_FreeSurface(increasePointer);
+    SDL_FreeSurface(decreasePointer);
+
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
@@ -170,7 +179,6 @@ Display::~Display() {
 const CallbackHandler & Display::update() {
     /*
     drawDisplayedCaption(img);
-    drawPointer(img);
     drawStats(img);
     */
     /*
@@ -186,6 +194,7 @@ const CallbackHandler & Display::update() {
 
     SDL_FillRect(surface, nullptr, 0x000000);
     drawParticles();
+    drawPointer();
     SDL_UpdateWindowSurface(window);
     SDL_Event event;
     while(SDL_PollEvent(& event)) {
@@ -203,13 +212,19 @@ const CallbackHandler & Display::update() {
 void Display::drawDisplayedCaption(cv::Mat &img) const {
     drawText(img, displayedCaption, cv::Point(30, 60), cv::Scalar(255, 255, 255));
 }
+*/
+void Display::drawPointer() {
+    SDL_Surface *pointer = defaultPointer;
+    if(handler.sign > 0) pointer = increasePointer;
+    if(handler.sign < 0) pointer = decreasePointer;
 
-void Display::drawPointer(cv::Mat &img) const {
-    auto circleColor = cv::Scalar(255, 255, 255);
-    if(handler.sign > 0) circleColor = cv::Scalar(0, 0, 255);
-    if(handler.sign < 0) circleColor = cv::Scalar(255, 0, 0);
-    cv::circle(img, cv::Point(handler.pos.x, handler.pos.y), handler.radius, circleColor, 1);
-
+    const int numPointers = 12;
+    for(int i = 0; i < numPointers; ++i) {
+        double radians = (2. * M_PI / numPointers) * i;
+        double dx = handler.radius * sin(radians), dy = handler.radius * cos(radians);
+        drawSpriteFromCenter(pointer, (int) (handler.pos.x + dx), (int) (handler.pos.y + dy));
+    }
+/*
     std::string modeText = "";
     if(handler.action == MouseAction::heat) modeText = "Heat mode";
     if(handler.action == MouseAction::push) modeText = "Push mode";
@@ -221,8 +236,9 @@ void Display::drawPointer(cv::Mat &img) const {
     auto type = universe.getParticleTypes()[typeIdx];
     std::string typeText = std::to_string(typeIdx + 1) + ": " + type.getName();
     drawText(img, typeText, cv::Point(30, 150), type.getColor());
+    */
 }
-
+/*
 void Display::drawStats(cv::Mat &img) const {
     int n;
     double velocity, temp;
@@ -267,16 +283,20 @@ std::tuple<int, double, double> Display::computeStats() const {
     return { n, velocity.magnitude(), temp };
 }
 
-void Display::drawParticles() const {
+void Display::drawParticles() {
     for(auto it = universe.begin(); it != universe.end(); ++it) {
         auto *particle = (SDL_Surface *) it->type->getSpriteSurface();
         assert(particle != nullptr);
-        SDL_Rect inputRect{0, 0, particle->w, particle->h};
-        SDL_Rect outputRect{(int) it->pos.x - particle->w / 2, (int) it->pos.y - particle->h / 2, particle->w, particle->h};
-        SDL_BlitSurface(particle, & inputRect, surface, & outputRect);
+        drawSpriteFromCenter(particle, it->pos.x, it->pos.y);
     }
 }
 
+void Display::drawSpriteFromCenter(SDL_Surface *sprite, int x, int y) {
+    assert(sprite != nullptr);
+    SDL_Rect inputRect{0, 0, sprite->w, sprite->h};
+    SDL_Rect outputRect{x - sprite->w / 2, y - sprite->h / 2, sprite->w, sprite->h};
+    SDL_BlitSurface(sprite, & inputRect, surface, & outputRect);
+}
 
 std::string to_string(double x, int precision) {
     std::stringstream ss;

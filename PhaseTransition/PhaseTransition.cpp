@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 	if(setup.recordingPrefix != "") recordingPath = setup.recordingPrefix + currentDateTime() + ".avi";
 	Universe universe({ setup.sizeX, setup.sizeY, setup.forceFactor, setup.gravity }, setup.particleTypes);
 	setup.addParticlesToUniverse(universe);
-	Display display(universe, "Phase Transition", setup.displayedCaption, recordingPath);
+	Display display(universe, "Phase Transition", setup.displayedCaption, setup.directoryPath, recordingPath);
 
 	while(true) {
 		const CallbackHandler &handler = display.update();

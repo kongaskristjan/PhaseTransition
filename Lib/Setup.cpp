@@ -8,7 +8,7 @@
 
 Setup::Setup(std::string filePath) {
     size_t lastBackslash = filePath.rfind('/');
-    std::string directoryPath = lastBackslash == std::string::npos ? "" : filePath.substr(0, lastBackslash + 1);
+    directoryPath = lastBackslash == std::string::npos ? "" : filePath.substr(0, lastBackslash + 1);
 
     std::ifstream fin(filePath);
     while(fin.good()) {
