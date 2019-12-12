@@ -17,25 +17,25 @@
     };
 */
 
-template<typename IntegrableState, typename Differetiator>
+template<typename IntegrableState, typename Differetiator, typename Buffers>
 void advanceEuler(IntegrableState &x, const Differetiator &diff, double dT);
 
-template<typename IntegrableState, typename Differetiator>
+template<typename IntegrableState, typename Differetiator, typename Buffers>
 void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT);
 
-template<typename IntegrableState, typename Differetiator>
+template<typename IntegrableState, typename Differetiator, typename Buffers>
 void advanceEuler(IntegrableState &x, const Differetiator &diff, double dT) {
     // Compact form: x = x + diff.derivative(x) * dT;
 
     diff.prepareDifferentiation(x);
     static IntegrableState k1;
-    static IntegrableState derivativeCache; // Only for performance reasons
+    static Buffers derivativeCache; // Only for performance reasons
     diff.derivative(k1, derivativeCache, x);
     k1 *= dT;
     x += k1;
 }
 
-template<typename IntegrableState, typename Differetiator>
+template<typename IntegrableState, typename Differetiator, typename Buffers>
 void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT) {
     /* Equations from https://en.wikipedia.org/wiki/Runge-Kutta_methods.
        Can be written in more compact form:
@@ -50,12 +50,12 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
 
     static IntegrableState xInitial, xAdditive;
     static IntegrableState k1, k2, k3, k4;
-    static IntegrableState derivativeCache; // Only for performance reasons
+    static Buffers derivativeBuffers; // Only for performance reasons
 
     xInitial = x;
 
     // Compute k1 and add to x
-    diff.derivative(k1, derivativeCache, x);
+    diff.derivative(k1, derivativeBuffers, x);
 
     k1 *= dT;
     xAdditive = k1;
@@ -65,7 +65,7 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
     // Compute k2 and add to x
     k1 *= .5;
     k1 += xInitial;
-    diff.derivative(k2, derivativeCache, k1);
+    diff.derivative(k2, derivativeBuffers, k1);
     k2 *= dT;
     xAdditive = k2;
     xAdditive *= 2. / 6.;
@@ -74,7 +74,7 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
     // Compute k3 and add to x
     k2 *= .5;
     k2 += xInitial;
-    diff.derivative(k3, derivativeCache, k2);
+    diff.derivative(k3, derivativeBuffers, k2);
     k3 *= dT;
     xAdditive = k3;
     xAdditive *= 2. / 6.;
@@ -82,7 +82,7 @@ void advanceRungeKutta4(IntegrableState &x, const Differetiator &diff, double dT
 
     // Compute k4 and add to x
     k3 += xInitial;
-    diff.derivative(k4, derivativeCache, k3);
+    diff.derivative(k4, derivativeBuffers, k3);
     k4 *= dT;
     xAdditive = k4;
     xAdditive *= 1. / 6.;

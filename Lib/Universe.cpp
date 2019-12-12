@@ -126,20 +126,22 @@ UniverseState::iterator UniverseState::erase(UniverseState::iterator it) {
 }
 
 
-UniverseDifferentiator::UniverseDifferentiator(const UniverseConfig &_config, const std::vector<ParticleType> &_types):
-    config(_config), types(_types) {
+UniverseDifferentiator::UniverseDifferentiator(const UniverseConfig &_config, std::vector<ParticleType> _types):
+    config(_config), types(std::move(_types)) {
 }
 void UniverseDifferentiator::prepareDifferentiation(UniverseState &state) const {
     state.prepareDifferentiation();
 }
 
-void UniverseDifferentiator::derivative(UniverseState &der, UniverseState &derivativeCache, UniverseState &state) const {
+void UniverseDifferentiator::derivative(UniverseState &der, UniverseBuffers &derBuffers, UniverseState &state) const {
     // Using derivative cache as another accumulator for forces to avoid data race
 
     initForces(der, state);
-    initForces(derivativeCache, state);
-    computeForces(der, derivativeCache, state);
-    forcesToAccel(der, derivativeCache);
+    for (size_t i = 0; i < derBuffers.size(); ++i)
+        initForces(derBuffers[i], state);
+
+    computeForces(der, derBuffers, state);
+    forcesToAccel(der, derBuffers);
 }
 
 void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState &state) const {
@@ -156,7 +158,7 @@ void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState 
     }
 }
 
-void UniverseDifferentiator::computeForces(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state) const {
+void UniverseDifferentiator::computeForces(UniverseState &der, UniverseBuffers &derBuffers, const UniverseState &state) const {
     assert(! state.state.empty());
 
     size_t nThreads = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1;
@@ -165,45 +167,58 @@ void UniverseDifferentiator::computeForces(UniverseState &der, UniverseState &de
     std::vector<std::future<void>> futures;
     for(size_t i = 0; i < nThreads; ++i) {
         futures.push_back(threadPool.enqueue(& UniverseDifferentiator::computeForcesOneThread, this,
-                std::ref(der), std::ref(derivativeCache), std::cref(state), std::ref(counter)));
+                std::ref(der), std::ref(derBuffers), std::cref(state), std::ref(counter)));
     }
     for(size_t i = 0; i < futures.size(); ++i)
         futures[i].wait();
 }
 
-void UniverseDifferentiator::computeForcesOneThread(UniverseState &der, UniverseState &derivativeCache,
+void UniverseDifferentiator::computeForcesOneThread(UniverseState &der, UniverseBuffers &derBuffers,
         const UniverseState &state, AtomicCounter &counter) const {
     assert(! state.state.empty());
+
+    struct OtherCell { UniverseState &other; int x; int y; };
+    std::array<OtherCell, 5> cells = {
+            OtherCell{der, 0, 0},
+            OtherCell{derBuffers[0], 1, 0},
+            OtherCell{derBuffers[1], -1, 1},
+            OtherCell{derBuffers[2], 0, 1},
+            OtherCell{derBuffers[3], 1, 1},
+    };
 
     const int sizeX = state.state[0].size();
     for (int idx = counter.next(); idx < counter.total(); idx = counter.next()) {
         int y0 = idx / sizeX;
         int x0 = idx % sizeX;
-        for(int i0 = 0; i0 < (int) state.state[y0][x0].size(); ++i0) {
+        for (size_t i0 = 0; i0 < state.state[y0][x0].size(); ++i0) { // Compute forces by edges and gravity
             const auto &pState0 = state.state[y0][x0][i0];
             auto &pDer0 = der.state[y0][x0][i0];
-            // The if conditions avoid computing the same force twice
-            for(int y1 = std::max(0, y0 - 1); y1 < std::min((int) state.state.size(), y0 + 2); ++y1) {
-                if (y1 < y0) continue;
-                for (int x1 = std::max(0, x0 - 1); x1 < std::min((int) state.state[y1].size(), x0 + 2); ++x1) {
-                    if(y1 == y0 && x1 < x0) continue;
-                    for (int i1 = 0; i1 < (int) state.state[y1][x1].size(); ++i1) {
-                        if (y0 == y1 && x0 == x1 && i0 <= i1) continue;
-
-                        const auto &pState1 = state.state[y1][x1][i1];
-                        auto &pDer1 = derivativeCache.state[y1][x1][i1];
-                        Vector2D f = pState0.computeForce(pState1);
-                        pDer0.v += f;
-                        pDer1.v -= f;
-                    }
-                }
-            }
-
             pDer0.v.x += boundForce(-pState0.pos.x);
             pDer0.v.x -= boundForce(pState0.pos.x - config.sizeX);
             pDer0.v.y += boundForce(-pState0.pos.y);
             pDer0.v.y -= boundForce(pState0.pos.y - config.sizeY);
             pDer0.v.y += config.gravity * pState0.type->getMass();
+        }
+
+        for (size_t cellIdx = 0; cellIdx < cells.size(); ++cellIdx) { // Compute interaction forces
+            OtherCell &cell = cells[cellIdx];
+            int y1 = y0 + cell.y;
+            int x1 = x0 + cell.x;
+            if (y1 < 0 || x1 < 0 || y1 >= state.state.size() || x1 >= state.state[y1].size())
+                continue;
+
+            for (size_t i0 = 0; i0 < state.state[y0][x0].size(); ++i0) {
+                const auto &pState0 = state.state[y0][x0][i0];
+                auto &pDer0 = der.state[y0][x0][i0];
+                size_t maxI1 = cellIdx == 0 ? i0 : state.state[y1][x1].size();
+                for (size_t i1 = 0; i1 < maxI1; ++i1) {
+                    const auto &pState1 = state.state[y1][x1][i1];
+                    auto &pDer1 = cell.other.state[y1][x1][i1];
+                    Vector2D f = pState0.computeForce(pState1);
+                    pDer0.v += f;
+                    pDer1.v -= f;
+                }
+            }
         }
     }
 }
@@ -213,13 +228,15 @@ double UniverseDifferentiator::boundForce(double overEdge) const {
     return config.forceFactor * overEdge * overEdge * overEdge * overEdge;
 }
 
-void UniverseDifferentiator::forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const {
+void UniverseDifferentiator::forcesToAccel(UniverseState &der, const UniverseBuffers &derBuffers) const {
     for(size_t y = 0; y < der.state.size(); ++y)
         for(size_t x = 0; x < der.state[y].size(); ++x)
             for(size_t i = 0; i < der.state[y][x].size(); ++i) {
                 auto &pDer = der.state[y][x][i];
-                auto &pDerCache = derivativeCache.state[y][x][i];
-                pDer.v += pDerCache.v;
+                for(const UniverseState &buffer: derBuffers) {
+                    auto &pDerCache = buffer.state[y][x][i];
+                    pDer.v += pDerCache.v;
+                }
                 pDer.v *= 1. / pDer.type->getMass();
             }
 }
@@ -244,7 +261,7 @@ void Universe::removeParticle(int index) {
 }
 
 void Universe::advance(double dT) {
-    advanceRungeKutta4(state, diff, dT);
+    advanceRungeKutta4<UniverseState, UniverseDifferentiator, UniverseBuffers>(state, diff, dT);
 }
 
 Vector2D Universe::clampInto(const Vector2D &pos) {

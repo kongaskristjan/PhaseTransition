@@ -23,8 +23,8 @@ TEST(IntegratorTest, Exponent) {
 
     Linear diff;
     for(int i = 0; i < nSteps; ++i) {
-        advanceEuler(xEuler, diff, dT);
-        advanceRungeKutta4(xRK4, diff, dT);
+        advanceEuler<double, Linear, double>(xEuler, diff, dT);
+        advanceRungeKutta4<double, Linear, double>(xRK4, diff, dT);
     }
 
     EXPECT_NEAR(xEuler, M_E, 1e-2);
