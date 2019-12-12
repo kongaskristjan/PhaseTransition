@@ -1,6 +1,8 @@
 
 #include "Lib/Particle.h"
 #include <cmath>
+#include <SDL2/SDL_image.h>
+
 
 ParticleState::ParticleState(): pos(Vector2D(0, 0)), v(Vector2D(0, 0)) {}
 ParticleState::ParticleState(const Vector2D &_pos): pos(_pos), v(Vector2D(0, 0)) {}
@@ -13,13 +15,13 @@ Vector2D ParticleState::computeForce(const ParticleState &rhs) const { return ty
 
 
 ParticleType::ParticleType(double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range):
-    ParticleType("", cv::Scalar(255, 255, 255), _mass, _radius, _exclusionConstant, _dipoleMoment, _range) {
+    ParticleType("", "", _mass, _radius, _exclusionConstant, _dipoleMoment, _range) {
 }
 
-ParticleType::ParticleType(const std::string &_name, const cv::Scalar &_color,
+ParticleType::ParticleType(const std::string &_name, const std::string &spritePath,
         double _mass, double _radius, double _exclusionConstant, double _dipoleMoment, double _range) {
     name = _name;
-    color = _color;
+    if(! spritePath.empty()) spriteSurface = SDL_LoadBMP(spritePath.c_str());
     mass = _mass;
     radius = _radius;
     exclusionConstant = _exclusionConstant;

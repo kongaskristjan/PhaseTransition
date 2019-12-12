@@ -3,6 +3,8 @@
 
 #include <vector>
 #include "Lib/Particle.h"
+#include "Lib/AtomicCounter.h"
+#include "Lib/ThreadPool.h"
 
 struct UniverseConfig {
     int sizeX, sizeY;
@@ -56,23 +58,11 @@ struct UniverseDifferentiator {
 private:
     void initForces(UniverseState &der, const UniverseState &state) const;
     void computeForces(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state) const;
-    void forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const;
-
+    void computeForcesOneThread(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state,
+            AtomicCounter &counter) const;
     double boundForce(double overEdge) const;
 
-public:
-	class ParallelForces : public cv::ParallelLoopBody {
-	public:
-		ParallelForces(const UniverseDifferentiator &diff,
-		        UniverseState &der, UniverseState &derivativeCache, const UniverseState &state);
-		void operator()(const cv::Range& range) const;
-		ParallelForces& operator=(const ParallelForces &);
-
-	private:
-        const UniverseDifferentiator &diff;
-        UniverseState &der, &derivativeCache;
-        const UniverseState &state;
-	};
+    void forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const;
 };
 
 

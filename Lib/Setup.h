@@ -12,6 +12,7 @@ struct ParticleSetup {
 };
 
 struct Setup {
+    std::string directoryPath;
     std::string recordingPrefix;
     std::string displayedCaption;
     std::vector<ParticleType> particleTypes;

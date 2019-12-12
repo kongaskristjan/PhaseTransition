@@ -42,8 +42,8 @@ TEST(UniverseTest, Bounds) {
     ParticleState state1(Vector2D(0.5, 0.5), Vector2D(0, 1));
     universe.addParticle(0, state0);
     universe.addParticle(0, state1);
-    const double dT = 1e-2;
-    for(double t = 0; t < 10; t += dT) universe.advance(dT); // Particles would be out of Universe if not bounded
+    const double dT = 2e-2;
+    for(double t = 0; t < 5; t += dT) universe.advance(dT); // Particles would be out of Universe if not bounded
 
     ASSERT_GT((universe.begin())->pos.x, -2);
     ASSERT_LT((universe.begin())->pos.x, 3);

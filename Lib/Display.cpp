@@ -5,9 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <SDL_ttf.h>
 #include "Display.h"
 #include "Globals.h"
 
@@ -19,25 +17,26 @@ CallbackHandler::CallbackHandler(int _totalParticleTypes):
     totalParticleTypes(_totalParticleTypes) {
 }
 
-void CallbackHandler::mouseCallback(int event, int x, int y, int flags, void *userdata) {
-    CallbackHandler &thisHandler = * (CallbackHandler *) userdata;
-    if(x != -1 || y != -1) thisHandler.pos = Vector2D(x, y);
+void CallbackHandler::mouseCallback(const SDL_Event &event) {
+    int x, y;
+    SDL_GetMouseState(& x, & y);
+    pos = Vector2D(x, y);
 
-    switch(event) {
-    case CV_EVENT_LBUTTONDOWN: thisHandler.leftDown = true; break;
-    case CV_EVENT_LBUTTONUP: thisHandler.leftDown = false; break;
-    case CV_EVENT_RBUTTONDOWN: thisHandler.rightDown = true; break;
-    case CV_EVENT_RBUTTONUP: thisHandler.rightDown = false; break;
-    case CV_EVENT_MOUSEHWHEEL:
-        thisHandler.radius *= pow(1.2, cv::getMouseWheelDelta(flags));
-        thisHandler.radius = std::max(thisHandler.radius, 10.);
-        thisHandler.radius = std::min(thisHandler.radius, 200.);
-        break;
+    if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+        bool down = event.type == SDL_MOUSEBUTTONDOWN;
+        if (event.button.button == SDL_BUTTON_LEFT) leftDown = down;
+        if (event.button.button == SDL_BUTTON_RIGHT) rightDown = down;
     }
-    thisHandler.sign = (int) thisHandler.leftDown - (int) thisHandler.rightDown;
+    if(event.type == SDL_MOUSEWHEEL) {
+        radius *= pow(1.2, -event.wheel.y);
+        radius = std::max(radius, 10.);
+        radius = std::min(radius, 200.);
+    }
+    sign = (int) leftDown - (int) rightDown;
 }
 
-void CallbackHandler::setActionFromKey(int key) {
+void CallbackHandler::keyboardCallback(const SDL_Event &event) {
+    int key = event.key.keysym.sym;
     if(key == 'h') action = MouseAction::heat;
     if(key == 'p') action = MouseAction::push;
     if(key == 'c') action = MouseAction::create;
@@ -138,27 +137,52 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 }
 
 
-Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath):
-    universe(_universe), displayedCaption(_displayedCaption), handler(_universe.getParticleTypes().size()) {
+Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption,
+        const std::string &_directoryPath, const std::string &recordingPath):
+    universe(_universe), displayedCaption(_displayedCaption), directoryPath(_directoryPath),
+        handler(_universe.getParticleTypes().size()) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
-    cv::namedWindow(windowCaption, cv::WINDOW_AUTOSIZE);
-    cv::setMouseCallback(windowCaption, CallbackHandler::mouseCallback, & handler);
+
+    if(SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+
+    window = SDL_CreateWindow(windowCaption.data(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                              universe.getConfig().sizeX, universe.getConfig().sizeY, SDL_WINDOW_SHOWN);
+    if(window == nullptr) {
+        std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+    surface = SDL_GetWindowSurface(window);
+    defaultPointer = SDL_LoadBMP((directoryPath + "Sprites/DefaultPointer.bmp").c_str());
+    increasePointer = SDL_LoadBMP((directoryPath + "Sprites/IncreasePointer.bmp").c_str());
+    decreasePointer = SDL_LoadBMP((directoryPath + "Sprites/DecreasePointer.bmp").c_str());
+
+    TTF_Init();
+    font = TTF_OpenFont((directoryPath + "Fonts/DroidSans.ttf").c_str(), 24);
 
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
         auto path = std::filesystem::path(recordingPath);
         std::filesystem::create_directories(path.parent_path());
 #endif
-        recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
+        //recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
 }
 
-const CallbackHandler & Display::update() {
-    auto img = drawParticles();
-    drawDisplayedCaption(img);
-    drawPointer(img);
-    drawStats(img);
+Display::~Display() {
+    SDL_FreeSurface(defaultPointer);
+    SDL_FreeSurface(increasePointer);
+    SDL_FreeSurface(decreasePointer);
+    TTF_CloseFont(font);
 
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
+
+const CallbackHandler & Display::update() {
+    /*
     if(recorder.isOpened()) {
         recorder.write(img);
 
@@ -167,48 +191,81 @@ const CallbackHandler & Display::update() {
         if(millisFromEpoch % 1000 < 500)
             drawText(img, "Recording...", cv::Point(30, 30));
     }
+    */
 
-    cv::imshow(windowCaption, img);
-    handler.setActionFromKey(cv::waitKey(1));
+    SDL_FillRect(surface, nullptr, 0x000000);
+    drawParticles();
+    drawDisplayedCaption();
+    drawStats();
+    drawPointer();
+    SDL_UpdateWindowSurface(window);
+    SDL_Event event;
+    while(SDL_PollEvent(& event)) {
+        if(event.type == SDL_QUIT)
+            handler.quit = true;
+        if(event.type == SDL_KEYDOWN)
+            handler.keyboardCallback(event);
+        if(event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEWHEEL
+                || event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP)
+            handler.mouseCallback(event);
+    }
     return handler;
 }
 
-void Display::drawDisplayedCaption(cv::Mat &img) const {
-    drawText(img, displayedCaption, cv::Point(30, 60), cv::Scalar(255, 255, 255));
+void Display::drawDisplayedCaption() {
+    drawText(displayedCaption, 30, 60);
 }
 
-void Display::drawPointer(cv::Mat &img) const {
-    auto circleColor = cv::Scalar(255, 255, 255);
-    if(handler.sign > 0) circleColor = cv::Scalar(0, 0, 255);
-    if(handler.sign < 0) circleColor = cv::Scalar(255, 0, 0);
-    cv::circle(img, cv::Point(handler.pos.x, handler.pos.y), handler.radius, circleColor, 1);
+void Display::drawPointer() {
+    SDL_Surface *pointer = defaultPointer;
+    if(handler.sign > 0) pointer = increasePointer;
+    if(handler.sign < 0) pointer = decreasePointer;
+
+    const int numPointers = 12;
+    for(int i = 0; i < numPointers; ++i) {
+        double radians = (2. * M_PI / numPointers) * i;
+        double dx = handler.radius * sin(radians), dy = handler.radius * cos(radians);
+        drawSpriteFromCenter(pointer, (int) (handler.pos.x + dx), (int) (handler.pos.y + dy));
+    }
 
     std::string modeText = "";
     if(handler.action == MouseAction::heat) modeText = "Heat mode";
     if(handler.action == MouseAction::push) modeText = "Push mode";
     if(handler.action == MouseAction::create) modeText = "Create mode";
     if(handler.action == MouseAction::spray) modeText = "Spray mode";
-    drawText(img, modeText, cv::Point(30, 120));
+    drawText(modeText, 30, 120);
 
     int typeIdx = handler.particleTypeIdx;
     auto type = universe.getParticleTypes()[typeIdx];
     std::string typeText = std::to_string(typeIdx + 1) + ": " + type.getName();
-    drawText(img, typeText, cv::Point(30, 150), type.getColor());
+    drawText(typeText, 30, 150);
 }
 
-void Display::drawStats(cv::Mat &img) const {
+void Display::drawStats() {
     int n;
     double velocity, temp;
     std::tie(n, velocity, temp) = computeStats();
 
     const int prec = 2;
-    drawText(img, "n = " + std::to_string(n), cv::Point(30, 200));
-    drawText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 230));
-    drawText(img, "temp = " + to_string(temp, prec), cv::Point(30, 260));
+    drawText("n = " + std::to_string(n), 30, 200);
+    drawText("velocity = " + to_string(velocity, prec), 30, 230);
+    drawText("temp = " + to_string(temp, prec), 30, 260);
 }
 
-void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color) const {
-    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., color, 2);
+void Display::drawText(const std::string &text, int x, int y) {
+    if(text == "") return;
+
+    SDL_Color color = {255, 255, 255};
+    SDL_Surface* message = TTF_RenderText_Blended(font, text.c_str(), color);
+
+    SDL_Rect outputRect;
+    outputRect.x = x;
+    outputRect.y = y;
+    outputRect.w = message->w;
+    outputRect.h = message->h;
+
+    SDL_BlitSurface(message, nullptr, surface, & outputRect);
+    SDL_FreeSurface(message);
 }
 
 std::tuple<int, double, double> Display::computeStats() const {
@@ -240,15 +297,20 @@ std::tuple<int, double, double> Display::computeStats() const {
     return { n, velocity.magnitude(), temp };
 }
 
-cv::Mat Display::drawParticles() const {
-    auto img = cv::Mat(cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY), CV_8UC3, cv::Scalar(0, 0, 0));
+void Display::drawParticles() {
     for(auto it = universe.begin(); it != universe.end(); ++it) {
-        double radius = 0.6 * it->type->getRadius();
-        cv::circle(img, cv::Point2i(it->pos.x, it->pos.y), radius, it->type->getColor(), -1);
+        auto *particle = (SDL_Surface *) it->type->getSpriteSurface();
+        assert(particle != nullptr);
+        drawSpriteFromCenter(particle, it->pos.x, it->pos.y);
     }
-    return img;
 }
 
+void Display::drawSpriteFromCenter(SDL_Surface *sprite, int x, int y) {
+    assert(sprite != nullptr);
+    SDL_Rect inputRect{0, 0, sprite->w, sprite->h};
+    SDL_Rect outputRect{x - sprite->w / 2, y - sprite->h / 2, sprite->w, sprite->h};
+    SDL_BlitSurface(sprite, & inputRect, surface, & outputRect);
+}
 
 std::string to_string(double x, int precision) {
     std::stringstream ss;

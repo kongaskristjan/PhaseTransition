@@ -5,15 +5,20 @@
 #include <string>
 #include <algorithm>
 #include <cassert>
-#include <opencv2/core.hpp>
 
 Setup::Setup(std::string filePath) {
+    size_t lastBackslash = filePath.rfind('/');
+    directoryPath = lastBackslash == std::string::npos ? "" : filePath.substr(0, lastBackslash + 1);
+
     std::ifstream fin(filePath);
     while(fin.good()) {
         std::string key;
         fin >> key;
 
-        if(key == "recordingPrefix") fin >> recordingPrefix;
+        if(key == "recordingPrefix") {
+            fin >> recordingPrefix;
+            recordingPrefix = directoryPath + recordingPrefix;
+        }
         if(key == "displayedCaption") {
             fin >> displayedCaption;
             std::replace(displayedCaption.begin(), displayedCaption.end(), '_', ' ');
@@ -21,13 +26,11 @@ Setup::Setup(std::string filePath) {
         if(key == "particleType") {
             double mass, radius, exclusionConstant, dipoleMoment, range;
             fin >> mass >> radius >> exclusionConstant >> dipoleMoment >> range;
-            std::string name;
-            int colorRed, colorGreen, colorBlue;
-            fin >> name >> colorRed >> colorGreen >> colorBlue;
+            std::string name, spriteLocation;
+            fin >> name >> spriteLocation;
             std::replace(name.begin(), name.end(), '_', ' ');
-            cv::Scalar color(colorBlue, colorGreen, colorRed);
 
-            particleTypes.emplace_back(name, color, mass, radius, exclusionConstant, dipoleMoment, range);
+            particleTypes.emplace_back(name, directoryPath + spriteLocation, mass, radius, exclusionConstant, dipoleMoment, range);
         }
         if(key == "particle") {
             ParticleSetup p;

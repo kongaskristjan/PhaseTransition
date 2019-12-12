@@ -3,19 +3,21 @@
 
 #include "Lib/Universe.h"
 #include "Lib/Vector2.h"
-#include <opencv2/videoio.hpp>
+#include <SDL2/SDL.h>
+#include <SDL_ttf.h>
 
 enum class MouseAction { heat, push, create, spray };
 
 struct CallbackHandler {
     CallbackHandler(int _totalParticleTypes);
-    static void mouseCallback(int event, int _x, int _y, int _flags, void *userdata);
-    void setActionFromKey(int _key);
+    void mouseCallback(const SDL_Event &event);
+    void keyboardCallback(const SDL_Event &event);
 
     Vector2D pos = Vector2D(1e6, 1e6);
     int sign = 0; // left mouse = 1, none = 0, right mouse = -1
     double radius = 50;
     bool leftDown = false, rightDown = false;
+    bool quit = false;
 
     MouseAction action = MouseAction::create;
     int particleTypeIdx = 0;
@@ -34,21 +36,29 @@ private:
 
 class Display {
 public:
-    Display(Universe &universe, const std::string &_windowCaption, const std::string &_displayedCaption, const std::string &recordingPath="");
+    Display(Universe &universe, const std::string &_windowCaption, const std::string &_displayedCaption,
+            const std::string &_directoryPath, const std::string &recordingPath="");
+    ~Display();
     const CallbackHandler & update();
 
 private:
-    cv::Mat drawParticles() const;
-    void drawDisplayedCaption(cv::Mat &img) const;
-    void drawPointer(cv::Mat &img) const;
-    void drawStats(cv::Mat &img) const;
-    void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
+    void drawParticles();
+    void drawDisplayedCaption();
+    void drawPointer();
+    void drawStats();
+    void drawText(const std::string &text, int x, int y);
+    void drawSpriteFromCenter(SDL_Surface *sprite, int x, int y);
     std::tuple<int, double, double> computeStats() const;
 
     Universe &universe;
     std::string windowCaption, displayedCaption;
+    std::string directoryPath;
     CallbackHandler handler;
-    cv::VideoWriter recorder;
+    //cv::VideoWriter recorder;
+    SDL_Window *window = nullptr;
+    SDL_Surface *surface = nullptr;
+    SDL_Surface *defaultPointer = nullptr, *increasePointer = nullptr, *decreasePointer = nullptr;
+    TTF_Font *font;
 };
 
 std::string to_string(double x, int precision);

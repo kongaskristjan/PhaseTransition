@@ -1,10 +1,9 @@
 
 #include "Lib/Integrators.h"
 #include "Lib/Universe.h"
-#include <opencv2/core.hpp>
 #include <vector>
 #include <cassert>
-#include <algorithm>
+#include <future>
 
 void UniverseState::setInteractionDistance(const UniverseConfig &config, double dist) {
     assert(size_ == 0);
@@ -159,38 +158,25 @@ void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState 
 
 void UniverseDifferentiator::computeForces(UniverseState &der, UniverseState &derivativeCache, const UniverseState &state) const {
     assert(! state.state.empty());
-    size_t total = state.state.size() * state.state[0].size();
-    cv::parallel_for_(cv::Range{ 0, (int) total },
-            UniverseDifferentiator::ParallelForces{ *this, der, derivativeCache, state });
+
+    size_t nThreads = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1;
+
+    AtomicCounter counter(state.state.size() * state.state[0].size());
+    std::vector<std::future<void>> futures;
+    for(size_t i = 0; i < nThreads; ++i) {
+        futures.push_back(threadPool.enqueue(& UniverseDifferentiator::computeForcesOneThread, this,
+                std::ref(der), std::ref(derivativeCache), std::cref(state), std::ref(counter)));
+    }
+    for(size_t i = 0; i < futures.size(); ++i)
+        futures[i].wait();
 }
 
-void UniverseDifferentiator::forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const {
-    for(size_t y = 0; y < der.state.size(); ++y)
-        for(size_t x = 0; x < der.state[y].size(); ++x)
-            for(size_t i = 0; i < der.state[y][x].size(); ++i) {
-                auto &pDer = der.state[y][x][i];
-                auto &pDerCache = derivativeCache.state[y][x][i];
-                pDer.v += pDerCache.v;
-                pDer.v *= 1. / pDer.type->getMass();
-            }
-}
-
-double UniverseDifferentiator::boundForce(double overEdge) const {
-    if(overEdge < 0) return 0;
-    return config.forceFactor * overEdge * overEdge * overEdge * overEdge;
-}
-
-
-UniverseDifferentiator::ParallelForces::ParallelForces(const UniverseDifferentiator &diff,
-        UniverseState &der, UniverseState &derivativeCache, const UniverseState &state)
-    : diff(diff), der(der), derivativeCache(derivativeCache), state(state) {
-}
-
-void UniverseDifferentiator::ParallelForces::operator()(const cv::Range& range) const {
+void UniverseDifferentiator::computeForcesOneThread(UniverseState &der, UniverseState &derivativeCache,
+        const UniverseState &state, AtomicCounter &counter) const {
     assert(! state.state.empty());
 
     const int sizeX = state.state[0].size();
-	for (int idx = range.start; idx < range.end; ++idx) {
+    for (int idx = counter.next(); idx < counter.total(); idx = counter.next()) {
         int y0 = idx / sizeX;
         int x0 = idx % sizeX;
         for(int i0 = 0; i0 < (int) state.state[y0][x0].size(); ++i0) {
@@ -213,21 +199,33 @@ void UniverseDifferentiator::ParallelForces::operator()(const cv::Range& range) 
                 }
             }
 
-            pDer0.v.x += diff.boundForce(-pState0.pos.x);
-            pDer0.v.x -= diff.boundForce(pState0.pos.x - diff.config.sizeX);
-            pDer0.v.y += diff.boundForce(-pState0.pos.y);
-            pDer0.v.y -= diff.boundForce(pState0.pos.y - diff.config.sizeY);
-            pDer0.v.y += diff.config.gravity * pState0.type->getMass();
+            pDer0.v.x += boundForce(-pState0.pos.x);
+            pDer0.v.x -= boundForce(pState0.pos.x - config.sizeX);
+            pDer0.v.y += boundForce(-pState0.pos.y);
+            pDer0.v.y -= boundForce(pState0.pos.y - config.sizeY);
+            pDer0.v.y += config.gravity * pState0.type->getMass();
         }
     }
 }
 
-UniverseDifferentiator::ParallelForces& UniverseDifferentiator::ParallelForces::operator=(const ParallelForces &) {
-    return *this;
+double UniverseDifferentiator::boundForce(double overEdge) const {
+    if(overEdge < 0) return 0;
+    return config.forceFactor * overEdge * overEdge * overEdge * overEdge;
 }
 
+void UniverseDifferentiator::forcesToAccel(UniverseState &der, const UniverseState &derivativeCache) const {
+    for(size_t y = 0; y < der.state.size(); ++y)
+        for(size_t x = 0; x < der.state[y].size(); ++x)
+            for(size_t i = 0; i < der.state[y][x].size(); ++i) {
+                auto &pDer = der.state[y][x][i];
+                auto &pDerCache = derivativeCache.state[y][x][i];
+                pDer.v += pDerCache.v;
+                pDer.v *= 1. / pDer.type->getMass();
+            }
+}
 
-Universe::Universe(const UniverseConfig &_config, const std::vector<ParticleType> &_types): diff(_config, _types) {
+Universe::Universe(const UniverseConfig &_config, const std::vector<ParticleType> &_types):
+        diff(_config, _types) {
     double interDist = 0;
     for(const auto &type: _types) {
         interDist = std::max(interDist, type.getRange());
