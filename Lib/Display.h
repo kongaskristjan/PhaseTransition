@@ -4,6 +4,7 @@
 #include "Lib/Universe.h"
 #include "Lib/Vector2.h"
 #include <SDL2/SDL.h>
+#include <SDL_ttf.h>
 
 enum class MouseAction { heat, push, create, spray };
 
@@ -42,10 +43,10 @@ public:
 
 private:
     void drawParticles();
-    //void drawDisplayedCaption(cv::Mat &img) const;
+    void drawDisplayedCaption();
     void drawPointer();
-    //void drawStats(cv::Mat &img) const;
-    //void drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color=cv::Scalar(255, 255, 255)) const;
+    void drawStats();
+    void drawText(const std::string &text, int x, int y);
     void drawSpriteFromCenter(SDL_Surface *sprite, int x, int y);
     std::tuple<int, double, double> computeStats() const;
 
@@ -57,6 +58,7 @@ private:
     SDL_Window *window = nullptr;
     SDL_Surface *surface = nullptr;
     SDL_Surface *defaultPointer = nullptr, *increasePointer = nullptr, *decreasePointer = nullptr;
+    TTF_Font *font;
 };
 
 std::string to_string(double x, int precision);

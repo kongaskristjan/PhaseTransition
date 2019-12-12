@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <SDL_ttf.h>
 #include "Display.h"
 #include "Globals.h"
 
@@ -158,6 +159,9 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
     increasePointer = SDL_LoadBMP((directoryPath + "Sprites/IncreasePointer.bmp").c_str());
     decreasePointer = SDL_LoadBMP((directoryPath + "Sprites/DecreasePointer.bmp").c_str());
 
+    TTF_Init();
+    font = TTF_OpenFont((directoryPath + "Fonts/DroidSans.ttf").c_str(), 24);
+
     if(! recordingPath.empty()) {
 #if __cplusplus >= 201703L
         auto path = std::filesystem::path(recordingPath);
@@ -171,16 +175,13 @@ Display::~Display() {
     SDL_FreeSurface(defaultPointer);
     SDL_FreeSurface(increasePointer);
     SDL_FreeSurface(decreasePointer);
+    TTF_CloseFont(font);
 
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
 const CallbackHandler & Display::update() {
-    /*
-    drawDisplayedCaption(img);
-    drawStats(img);
-    */
     /*
     if(recorder.isOpened()) {
         recorder.write(img);
@@ -194,6 +195,8 @@ const CallbackHandler & Display::update() {
 
     SDL_FillRect(surface, nullptr, 0x000000);
     drawParticles();
+    drawDisplayedCaption();
+    drawStats();
     drawPointer();
     SDL_UpdateWindowSurface(window);
     SDL_Event event;
@@ -208,11 +211,11 @@ const CallbackHandler & Display::update() {
     }
     return handler;
 }
-/*
-void Display::drawDisplayedCaption(cv::Mat &img) const {
-    drawText(img, displayedCaption, cv::Point(30, 60), cv::Scalar(255, 255, 255));
+
+void Display::drawDisplayedCaption() {
+    drawText(displayedCaption, 30, 60);
 }
-*/
+
 void Display::drawPointer() {
     SDL_Surface *pointer = defaultPointer;
     if(handler.sign > 0) pointer = increasePointer;
@@ -224,36 +227,47 @@ void Display::drawPointer() {
         double dx = handler.radius * sin(radians), dy = handler.radius * cos(radians);
         drawSpriteFromCenter(pointer, (int) (handler.pos.x + dx), (int) (handler.pos.y + dy));
     }
-/*
+
     std::string modeText = "";
     if(handler.action == MouseAction::heat) modeText = "Heat mode";
     if(handler.action == MouseAction::push) modeText = "Push mode";
     if(handler.action == MouseAction::create) modeText = "Create mode";
     if(handler.action == MouseAction::spray) modeText = "Spray mode";
-    drawText(img, modeText, cv::Point(30, 120));
+    drawText(modeText, 30, 120);
 
     int typeIdx = handler.particleTypeIdx;
     auto type = universe.getParticleTypes()[typeIdx];
     std::string typeText = std::to_string(typeIdx + 1) + ": " + type.getName();
-    drawText(img, typeText, cv::Point(30, 150), type.getColor());
-    */
+    drawText(typeText, 30, 150);
 }
-/*
-void Display::drawStats(cv::Mat &img) const {
+
+void Display::drawStats() {
     int n;
     double velocity, temp;
     std::tie(n, velocity, temp) = computeStats();
 
     const int prec = 2;
-    drawText(img, "n = " + std::to_string(n), cv::Point(30, 200));
-    drawText(img, "velocity = " + to_string(velocity, prec), cv::Point(30, 230));
-    drawText(img, "temp = " + to_string(temp, prec), cv::Point(30, 260));
+    drawText("n = " + std::to_string(n), 30, 200);
+    drawText("velocity = " + to_string(velocity, prec), 30, 230);
+    drawText("temp = " + to_string(temp, prec), 30, 260);
 }
 
-void Display::drawText(cv::Mat &img, const std::string &text, const cv::Point &loc, const cv::Scalar &color) const {
-    cv::putText(img, text, loc, cv::FONT_HERSHEY_PLAIN, 2., color, 2);
+void Display::drawText(const std::string &text, int x, int y) {
+    if(text == "") return;
+
+    SDL_Color color = {255, 255, 255};
+    SDL_Surface* message = TTF_RenderText_Blended(font, text.c_str(), color);
+
+    SDL_Rect outputRect;
+    outputRect.x = x;
+    outputRect.y = y;
+    outputRect.w = message->w;
+    outputRect.h = message->h;
+
+    SDL_BlitSurface(message, nullptr, surface, & outputRect);
+    SDL_FreeSurface(message);
 }
-*/
+
 std::tuple<int, double, double> Display::computeStats() const {
     int n = 0;
     double mass = 0;
