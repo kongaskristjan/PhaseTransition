@@ -1,7 +1,6 @@
 
 #include "Lib/Particle.h"
 #include <cmath>
-#include <SDL2/SDL_image.h>
 
 
 ParticleState::ParticleState(): pos(Vector2D(0, 0)), v(Vector2D(0, 0)) {}

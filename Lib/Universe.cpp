@@ -161,9 +161,12 @@ void UniverseDifferentiator::initForces(UniverseState &der, const UniverseState 
 void UniverseDifferentiator::computeForces(UniverseState &der, UniverseBuffers &derBuffers, const UniverseState &state) const {
     assert(! state.state.empty());
 
-    size_t nThreads = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1;
-
     AtomicCounter counter(state.state.size() * state.state[0].size());
+
+#ifdef __EMSCRIPTEN__
+    computeForcesOneThread(der, derBuffers, state, counter);
+#else
+    size_t nThreads = std::thread::hardware_concurrency() ? std::thread::hardware_concurrency() : 1;
     std::vector<std::future<void>> futures;
     for(size_t i = 0; i < nThreads; ++i) {
         futures.push_back(threadPool.enqueue(& UniverseDifferentiator::computeForcesOneThread, this,
@@ -171,6 +174,7 @@ void UniverseDifferentiator::computeForces(UniverseState &der, UniverseBuffers &
     }
     for(size_t i = 0; i < futures.size(); ++i)
         futures[i].wait();
+#endif
 }
 
 void UniverseDifferentiator::computeForcesOneThread(UniverseState &der, UniverseBuffers &derBuffers,

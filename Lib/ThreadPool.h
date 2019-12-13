@@ -120,6 +120,8 @@ inline ThreadPool::~ThreadPool()
         worker.join();
 }
 
+#ifndef __EMSCRIPTEN__
 extern ThreadPool threadPool;
+#endif
 
 #endif

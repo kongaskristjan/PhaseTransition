@@ -1,0 +1,6 @@
+gravity 1e-2
+sizeX 1280
+sizeY 720
+particleType 1 4 2 0.8 20 small Sprites/Small.bmp
+particleType 1 5.6 2.8 1.12 28 large Sprites/Large.bmp
+particleType 1 5.6 11.2 0 28 heavy_inert Sprites/HeavyInert.bmp

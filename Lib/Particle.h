@@ -3,6 +3,7 @@
 
 #include "Lib/Vector2.h"
 #include <SDL2/SDL.h>
+#include <string>
 
 class ParticleType;
 

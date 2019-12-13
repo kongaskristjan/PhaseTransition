@@ -2,7 +2,6 @@
 #define __VECTOR2_H__
 
 #include <cmath>
-#include <gtest/gtest.h>
 
 template<typename T>
 struct Vector2 {

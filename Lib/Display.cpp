@@ -4,7 +4,9 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <chrono>
+#include <cassert>
 #include <SDL_ttf.h>
 #include "Display.h"
 #include "Globals.h"
@@ -28,7 +30,10 @@ void CallbackHandler::mouseCallback(const SDL_Event &event) {
         if (event.button.button == SDL_BUTTON_RIGHT) rightDown = down;
     }
     if(event.type == SDL_MOUSEWHEEL) {
-        radius *= pow(1.2, -event.wheel.y);
+        int scroll = 0;
+        if(event.wheel.y > 0) scroll = 1;
+        if(event.wheel.y < 0) scroll = -1;
+        radius *= pow(1.2, -scroll);
         radius = std::max(radius, 10.);
         radius = std::min(radius, 200.);
     }
