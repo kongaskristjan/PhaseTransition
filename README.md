@@ -12,8 +12,9 @@ Requirements:
 * cmake 3.10+
 * pthreads
 * SDL 2 and SDL_ttf 2
-* gtest (optional)
-* emscripten (optional)
+* ffmpeg libraries (optional - recording)
+* gtest (optional - running tests)
+* emscripten (optional - compilation to WebAssembly)
 
 Building:
 

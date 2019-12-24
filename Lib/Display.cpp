@@ -144,8 +144,9 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 
 Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption,
         const std::string &_directoryPath, const std::string &recordingPath):
-    universe(_universe), displayedCaption(_displayedCaption), directoryPath(_directoryPath),
-        handler(_universe.getParticleTypes().size()) {
+        universe(_universe), displayedCaption(_displayedCaption), directoryPath(_directoryPath),
+        handler(_universe.getParticleTypes().size()),
+        recorder(recordingPath, _universe.getConfig().sizeX, _universe.getConfig().sizeY, 60) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -166,14 +167,6 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
 
     TTF_Init();
     font = TTF_OpenFont((directoryPath + "Fonts/DroidSans.ttf").c_str(), 24);
-
-    if(! recordingPath.empty()) {
-#if __cplusplus >= 201703L
-        auto path = std::filesystem::path(recordingPath);
-        std::filesystem::create_directories(path.parent_path());
-#endif
-        //recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
-    }
 }
 
 Display::~Display() {
@@ -187,22 +180,13 @@ Display::~Display() {
 }
 
 const CallbackHandler & Display::update() {
-    /*
-    if(recorder.isOpened()) {
-        recorder.write(img);
-
-        auto now = std::chrono::system_clock::now();
-        auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-        if(millisFromEpoch % 1000 < 500)
-            drawText(img, "Recording...", cv::Point(30, 30));
-    }
-    */
-
     SDL_FillRect(surface, nullptr, 0x000000);
     drawParticles();
     drawDisplayedCaption();
     drawStats();
     drawPointer();
+    if(recorder.isRecording()) recordAndDrawRecordingText();
+
     SDL_UpdateWindowSurface(window);
     SDL_Event event;
     while(SDL_PollEvent(& event)) {
@@ -272,6 +256,16 @@ void Display::drawText(const std::string &text, int x, int y) {
     SDL_BlitSurface(message, nullptr, surface, & outputRect);
     SDL_FreeSurface(message);
 }
+
+void Display::recordAndDrawRecordingText() {
+    recorder.encode(surface);
+
+    auto now = std::chrono::system_clock::now();
+    auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    if (millisFromEpoch % 1000 < 500)
+        drawText("Recording...", 30, 30);
+}
+
 
 std::tuple<int, double, double> Display::computeStats() const {
     int n = 0;

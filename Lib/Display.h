@@ -3,6 +3,7 @@
 
 #include "Lib/Universe.h"
 #include "Lib/Vector2.h"
+#include "Recorder.h"
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 
@@ -47,6 +48,7 @@ private:
     void drawPointer();
     void drawStats();
     void drawText(const std::string &text, int x, int y);
+    void recordAndDrawRecordingText();
     void drawSpriteFromCenter(SDL_Surface *sprite, int x, int y);
     std::tuple<int, double, double> computeStats() const;
 
@@ -54,7 +56,8 @@ private:
     std::string windowCaption, displayedCaption;
     std::string directoryPath;
     CallbackHandler handler;
-    //cv::VideoWriter recorder;
+    Recorder recorder;
+
     SDL_Window *window = nullptr;
     SDL_Surface *surface = nullptr;
     SDL_Surface *defaultPointer = nullptr, *increasePointer = nullptr, *decreasePointer = nullptr;
