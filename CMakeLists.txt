@@ -13,6 +13,11 @@ if(NOT EMSCRIPTEN)
     find_package(SDL2TTF REQUIRED)
 endif()
 
+find_package(SDL2Image)
+if(SDLIMAGE_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D SDL2_IMAGE_ENABLED")
+endif()
+
 FILE(GLOB LibSources Lib/*.cpp Lib/*.h)
 add_library(library ${LibSources})
 
@@ -27,9 +32,9 @@ if(EMSCRIPTEN)
 
     configure_file(Tests/PhaseTransition.html PhaseTransition.html COPY_ONLY)
 else()
-    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR} .)
+    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2TTF_INCLUDE_DIR} ${SDL2_IMAGE_INCLUDE_DIR} .)
 
-    target_link_libraries(PhaseTransition library ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY} Threads::Threads)
+    target_link_libraries(PhaseTransition library ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY} ${SDL2_IMAGE_LIBRARY} Threads::Threads)
 endif()
 
 # Testing

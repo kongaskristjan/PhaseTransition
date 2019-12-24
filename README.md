@@ -12,8 +12,9 @@ Requirements:
 * cmake 3.10+
 * pthreads
 * SDL 2 and SDL_ttf 2
-* gtest (optional)
-* emscripten (optional)
+* SDL_image 2 (optional - recording video)
+* gtest (optional - running tests)
+* emscripten (optional - building for web)
 
 Building:
 

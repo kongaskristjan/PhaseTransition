@@ -48,17 +48,22 @@ private:
     void drawStats();
     void drawText(const std::string &text, int x, int y);
     void drawSpriteFromCenter(SDL_Surface *sprite, int x, int y);
+    void recordAndDrawRecordingText();
     std::tuple<int, double, double> computeStats() const;
 
     Universe &universe;
     std::string windowCaption, displayedCaption;
     std::string directoryPath;
     CallbackHandler handler;
-    //cv::VideoWriter recorder;
     SDL_Window *window = nullptr;
     SDL_Surface *surface = nullptr;
     SDL_Surface *defaultPointer = nullptr, *increasePointer = nullptr, *decreasePointer = nullptr;
     TTF_Font *font;
+
+    std::string recordingPath;
+    bool isRecording;
+
+    int timestamp = 0;
 };
 
 std::string to_string(double x, int precision);

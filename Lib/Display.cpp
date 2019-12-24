@@ -11,8 +11,8 @@
 #include "Display.h"
 #include "Globals.h"
 
-#if __cplusplus >= 201703L
-#include <filesystem>
+#ifdef SDL2_IMAGE_ENABLED
+#include <SDL_image.h>
 #endif
 
 CallbackHandler::CallbackHandler(int _totalParticleTypes):
@@ -143,9 +143,9 @@ void UniverseModifier::addNew(Universe &universe, const CallbackHandler &handler
 
 
 Display::Display(Universe &_universe, const std::string &_windowCaption, const std::string &_displayedCaption,
-        const std::string &_directoryPath, const std::string &recordingPath):
+        const std::string &_directoryPath, const std::string &_recordingPath):
     universe(_universe), displayedCaption(_displayedCaption), directoryPath(_directoryPath),
-        handler(_universe.getParticleTypes().size()) {
+        handler(_universe.getParticleTypes().size()), recordingPath(_recordingPath) {
     windowCaption = _windowCaption + " - " + _displayedCaption;
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -167,12 +167,14 @@ Display::Display(Universe &_universe, const std::string &_windowCaption, const s
     TTF_Init();
     font = TTF_OpenFont((directoryPath + "Fonts/DroidSans.ttf").c_str(), 24);
 
+    isRecording = false;
     if(! recordingPath.empty()) {
-#if __cplusplus >= 201703L
-        auto path = std::filesystem::path(recordingPath);
-        std::filesystem::create_directories(path.parent_path());
+#if SDL2_IMAGE_ENABLED
+        isRecording = true;
+        system((std::string("mkdir -p ") + recordingPath).c_str());
+#else
+        std::cerr << "Warning: trying to record, but this build does not support recording" << std::endl;
 #endif
-        //recorder.open(recordingPath, CV_FOURCC('M','J','P','G'), 60, cv::Size(universe.getConfig().sizeX, universe.getConfig().sizeY));
     }
 }
 
@@ -187,22 +189,12 @@ Display::~Display() {
 }
 
 const CallbackHandler & Display::update() {
-    /*
-    if(recorder.isOpened()) {
-        recorder.write(img);
-
-        auto now = std::chrono::system_clock::now();
-        auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-        if(millisFromEpoch % 1000 < 500)
-            drawText(img, "Recording...", cv::Point(30, 30));
-    }
-    */
-
     SDL_FillRect(surface, nullptr, 0x000000);
     drawParticles();
     drawDisplayedCaption();
     drawStats();
     drawPointer();
+    if(isRecording) recordAndDrawRecordingText();
     SDL_UpdateWindowSurface(window);
     SDL_Event event;
     while(SDL_PollEvent(& event)) {
@@ -308,6 +300,19 @@ void Display::drawParticles() {
         assert(particle != nullptr);
         drawSpriteFromCenter(particle, it->pos.x, it->pos.y);
     }
+}
+
+void Display::recordAndDrawRecordingText() {
+    if(! isRecording) return;
+
+#ifdef SDL2_IMAGE_ENABLED
+    IMG_SaveJPG(surface, (recordingPath + std::to_string(timestamp++) + ".jpg").c_str(), 95);
+#endif
+
+    auto now = std::chrono::system_clock::now();
+    auto millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    if (millisFromEpoch % 1000 < 500)
+        drawText("Recording...", 30, 30);
 }
 
 void Display::drawSpriteFromCenter(SDL_Surface *sprite, int x, int y) {

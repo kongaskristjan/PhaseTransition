@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 #endif
 
 	std::string recordingPath;
-	if(! globalSetup->recordingPrefix.empty()) recordingPath = globalSetup->recordingPrefix + currentDateTime() + ".avi";
+	if(! globalSetup->recordingPrefix.empty()) recordingPath = globalSetup->recordingPrefix + currentDateTime() + "/";
 	globalUniverse.reset(new Universe({ globalSetup->sizeX, globalSetup->sizeY, globalSetup->forceFactor, globalSetup->gravity },
 	        globalSetup->particleTypes));
 	globalSetup->addParticlesToUniverse(*globalUniverse);
