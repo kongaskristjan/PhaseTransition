@@ -21,7 +21,7 @@ Building:
 * Create and change working directory to build directory: `mkdir build && cd build`
 * Build, run tests and program on Linux: `cmake -D CMAKE_BUILD_TYPE=Release .. && make && ./RunTests && ./PhaseTransition ../Setups/default.txt`,
 where `./RunTests` is optional.
-* Build for web using emscripten: `emconfigure cmake -D CMAKE_BUILD_TYPE=Release .. && emmake make`. This should generate PhaseTransition html, js and wasm files. You probably need a web server to actually run this in your browser: `python -m http.server 8080` (still from the build directory). Then go to <http://localhost:8080/PhaseTransition.html>. Currently the web build is slow because it's single-threaded.
+* Build for web using emscripten: `emconfigure cmake -D CMAKE_BUILD_TYPE=Release .. && emmake make`. This should generate PhaseTransition html, js and wasm files. You probably need a web server to actually run this in your browser: `python3 -m http.server 8080` (still from the build directory). Then go to <http://localhost:8080/PhaseTransition.html>. Currently the web build is slow because it's single-threaded.
 
 Default simulation resolution, particle properties, etc. can be modified in Setups/default.txt. For web build, modify Setups/web.txt and force a rebuild by removing all files in the build directory.
 
