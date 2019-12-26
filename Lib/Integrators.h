@@ -6,8 +6,9 @@
 
     class IntegrableState {
     public:
-        IntegrableState operator+=(const IntegrableState &);
-        IntegrableState operator*=(double);
+        IntegrableState::operator=(const IntegrableState &);
+        IntegrableState::operator+=(const IntegrableState &);
+        IntegrableState::operator*=(double);
     };
 
     class Differetiator {

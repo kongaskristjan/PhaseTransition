@@ -2,6 +2,7 @@
 #define __VECTOR2_H__
 
 #include <cmath>
+#include <iostream>
 
 template<typename T>
 struct Vector2 {
@@ -29,8 +30,11 @@ template<typename T> Vector2<T> operator-(const Vector2<T> &v) { return Vector2<
 template<typename T> T dotProduct(const Vector2<T> &lhs, const Vector2<T> &rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
 template<typename T> T crossProduct(const Vector2<T> &lhs, const Vector2<T> &rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
 
+template<typename T> inline std::ostream & operator<<(std::ostream &os, const Vector2<T> &v) { return os << "(" << v.x << ", " << v.y << ")"; }
+
 typedef Vector2<float> Vector2F;
 typedef Vector2<double> Vector2D;
+typedef Vector2<int> Vector2I;
 
 #define EXPECT_VECTOR2_EQ(lhs, rhs) do {\
     EXPECT_DOUBLE_EQ((lhs).x, (rhs).x);\

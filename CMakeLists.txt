@@ -19,7 +19,7 @@ if(SDLIMAGE_FOUND)
 endif()
 
 FILE(GLOB LibSources Lib/*.cpp Lib/*.h)
-add_library(library ${LibSources})
+add_library(library ${LibSources} Lib/IntegralImage.h Lib/StatsMap.h)
 
 FILE(GLOB RunSources PhaseTransition/*.cpp PhaseTransition/*.h)
 add_executable(PhaseTransition ${RunSources})
@@ -43,7 +43,7 @@ find_package(GTest)
 
 if(GTest_FOUND)
     FILE(GLOB TestSources Tests/*.cpp)
-    add_executable(RunTests ${TestSources})
+    add_executable(RunTests ${TestSources} Tests/IntegralImageTest.cpp Tests/StatsTest.cpp)
     target_link_libraries(RunTests library ${SDL2_LIBRARIES} ${SDL2TTF_LIBRARY} Threads::Threads GTest::GTest GTest::Main)
 
     gtest_discover_tests(RunTests)

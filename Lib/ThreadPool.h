@@ -23,8 +23,8 @@
 
 // Per pt. 2: In addition to the original source by Jakob Progsch and Václav Zeman, a global ThreadPool object is declared.
 
-#ifndef THREAD_POOL_H
-#define THREAD_POOL_H
+#ifndef __THREAD_POOL_H__
+#define __THREAD_POOL_H__
 
 #include <vector>
 #include <queue>
