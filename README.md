@@ -1,6 +1,6 @@
 # Phase Transition
 
-Check out the following video:
+[Try it out in your browser](https://kongaskristjan.github.io/2020/02/09/phase-transition.html) or watch this video:
 
 [![Video of the simulation](https://img.youtube.com/vi/SFf3pcE08NM/0.jpg)](https://youtu.be/SFf3pcE08NM)
 
