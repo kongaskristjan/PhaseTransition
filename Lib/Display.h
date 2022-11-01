@@ -17,6 +17,7 @@ struct CallbackHandler {
     int sign = 0; // left mouse = 1, none = 0, right mouse = -1
     double radius = 50;
     bool leftDown = false, rightDown = false;
+    bool isDrawingTemperature = false;
     bool quit = false;
 
     MouseAction action = MouseAction::create;
@@ -42,6 +43,7 @@ public:
     const CallbackHandler & update();
 
 private:
+    void drawTemperature();
     void drawParticles();
     void drawDisplayedCaption();
     void drawPointer();

@@ -41,7 +41,7 @@ Stats StatsMap::evaluate(Vector2I pos) const {
     stats.n = intNParticles.getInRange(pos, range);
 
     double mass = intMass.getInRange(pos, range);
-    stats.density = mass / ((2 * range + 1) * (2 * range + 1));
+    stats.density = mass / (squareLength * (2 * range + 1) * squareLength * (2 * range + 1));
 
     // Computing temperature:
     // ((degrees of freedom) / 2) * nkT = kinetic heat energy = total kinetic energy - directed kinetic energy

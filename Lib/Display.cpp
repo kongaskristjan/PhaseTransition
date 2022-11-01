@@ -10,6 +10,7 @@
 #include <SDL_ttf.h>
 #include "Display.h"
 #include "Globals.h"
+#include "StatsMap.h"
 
 #ifdef SDL2_IMAGE_ENABLED
 #include <SDL_image.h>
@@ -46,6 +47,7 @@ void CallbackHandler::keyboardCallback(const SDL_Event &event) {
     if(key == 'p') action = MouseAction::push;
     if(key == 'c') action = MouseAction::create;
     if(key == 's') action = MouseAction::spray;
+    if(key == 't') isDrawingTemperature = ! isDrawingTemperature;
 
     if('1' <= key && key <= '9') {
         int newParticleType = key - '0' - 1;
@@ -190,6 +192,7 @@ Display::~Display() {
 
 const CallbackHandler & Display::update() {
     SDL_FillRect(surface, nullptr, 0x000000);
+    if(handler.isDrawingTemperature) drawTemperature();
     drawParticles();
     drawDisplayedCaption();
     drawStats();
@@ -207,6 +210,26 @@ const CallbackHandler & Display::update() {
             handler.mouseCallback(event);
     }
     return handler;
+}
+
+void Display::drawTemperature() {
+    Image<Stats> statsImage = computeStatsImage(universe, 20, 10);
+    SDL_Surface *smallMap = SDL_CreateRGBSurface(0, statsImage.sizeX(), statsImage.sizeY(), 24, 0, 0, 0, 0);
+    auto* pixels = (unsigned char*)smallMap->pixels;
+    for(int y = 0; y < statsImage.sizeY(); ++y) {
+        for(int x = 0; x < statsImage.sizeX(); ++x) {
+            Stats stats = statsImage.get({x, y});
+            float strength = std::min(1.0, 10 * stats.density);
+            float color = std::min(1.0, stats.temp);
+            //std::cout << strength << " " << color << std::endl;
+            //std::cout << 3 * (y * surface->w + x) + 0 << std::endl;
+            pixels[3 * (y * smallMap->w + x) + 0] = 255;//(unsigned char) (255. * strength * color); // red
+            pixels[3 * (y * smallMap->w + x) + 1] = 0;//(unsigned char) (255. * strength * (1 - color)); // green
+            pixels[3 * (y * smallMap->w + x) + 2] = 0;//(unsigned char) (255. * strength * 0.5); // blue
+        }
+    }
+    SDL_BlitScaled(smallMap, nullptr, surface, nullptr);
+    SDL_FreeSurface(smallMap);
 }
 
 void Display::drawDisplayedCaption() {
